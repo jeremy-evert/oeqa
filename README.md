@@ -39,6 +39,21 @@ To get one for your own document, add this line when you send the template:
 
 To try the example, download `04_Roll_and_Read_Phone_Game.html`, send it to a phone, and open it in the phone's browser. (GitHub only shows the file as code. Use "Download raw file" first.) If your phone shows a plain preview instead of the game, put the file on any free web host, such as GitHub Pages, and open the link.
 
+## Even better: have the agent publish it for you
+
+The agent can also put the game on the web, so your phone only needs a link. This is how the live example was posted. The agent drove my own signed-in Chrome browser to create a new public GitHub repository, pushed the game into it, and switched on GitHub Pages. I only said what I wanted. It needs a Claude session with the Claude in Chrome extension connected to a Chrome that is signed in to GitHub.
+
+**Play the live example on a phone:** https://jeremy-evert.github.io/oeqa_spell_roller_public/ (source: https://github.com/jeremy-evert/oeqa_spell_roller_public)
+
+To get your own, add this line when you send the template:
+
+> Also post the phone game on GitHub Pages. Create a new public repository for it, push the single HTML file as `index.html`, turn on Pages for the `main` branch, and give me the link. Ask me before you create anything.
+
+Notes:
+- The repository is public, so anyone with the link can play. Do not put names or student work in it.
+- A link on the web (https) lets the phone remember microphone permission, so voice asks only once.
+- If the agent cannot reach your browser, you can do the same by hand: new repository, upload `index.html`, then Settings, Pages, branch `main`, Save.
+
 ## License
 
 BSD 2-Clause. See [`LICENSE`](LICENSE).
