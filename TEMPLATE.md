@@ -4,6 +4,10 @@
 
 > Read the attached document and follow the template in TEMPLATE.md. Put the result in my Google Drive if you can, and tell me what you did.
 
+Want a game version too? Add this line:
+
+> Also make a phone-playable web page. Follow the "Phone-playable web page" section in TEMPLATE.md.
+
 Everything below is written for the agent.
 
 ---
@@ -72,6 +76,42 @@ Keep it short. I want the result, not the story.
 
 ---
 
+## Optional: Phone-playable web page
+
+Only do this if I ask for it (for example: "Also make a phone-playable web page"). It works best when the document is an activity, game, or practice sheet that can be played on a screen. If it is not, tell me why in one line and skip it.
+
+Everything above still applies. The locked content stays locked. Anything you add is labeled NEW. No answer keys, student names, photos, or handwriting. Make the printable or editable version first, then the game.
+
+### What to build
+
+- **One file.** A single self-contained `.html` file. All styling, code, and pictures live inside it. No other files.
+- **No internet needed.** No outside links, scripts, fonts, images, analytics, or sign-ins. It must work with the phone in airplane mode.
+- **Opens with a tap.** I should be able to send the file to a phone, tap it, and play in the phone's browser. No installing, no accounts, no server.
+- **Phone first.** Upright screen, one thumb. Big buttons (about 56 pixels or larger) and large type. It must also look fine on a laptop and on a small phone.
+- **Same activity.** Use the original words, directions, and rules exactly as written. The game is the same activity made tappable, not a new one. If the original has a "ways to play" list, use it. For example, a partner way to play can become a two-player mode.
+- **The player is the judge.** The child or a grown-up taps whether they got it right. Do not grade, listen, or score for them, and do not invent an answer key. If a part of the activity needs an answer key the original does not have, leave that part out and tell me.
+- **Make it fun, and label it.** Good things to add: animated dice or cards, simple sounds with a mute button, stars, a progress path, a collection to fill, gentle celebration at the end. Anything not in the original is NEW. Include an About screen that says what came from the original and what is NEW.
+- **Kind to kids.** No punishing timers, no losing, no buzzers. A missed item is "still practicing", never "wrong".
+- **Private.** Nothing leaves the phone. No names. If it saves anything (a collection, for example), save it only on that device with no names, and give a button to clear it.
+- **Easy to use for everyone.** Meaning is never carried by color alone. Use real buttons. Respect the phone's reduce-motion setting.
+
+### How to check it
+
+1. Open it for real in a browser (a headless browser is fine) at phone size, about 390 by 844. Play it from start to finish. Also try a small screen, about 360 by 640.
+2. Search the file for every locked word and direction. Each must be there exactly as written.
+3. Search the file for outside links. The standard SVG address (`http://www.w3.org/2000/svg`) is fine. Remove anything else.
+4. Look for errors in the browser console. There should be none.
+5. Confirm nothing asks for the internet.
+
+### What to hand back
+
+1. The `.html` file
+2. Three short lines on opening it: send the file to the phone, tap it, and pick a browser if asked. If the phone shows only a plain preview, put the file on any free web host (GitHub Pages works) and open the link.
+3. A list of everything in the game that is NEW
+4. Anything a teacher should double-check, with the other [VERIFY] items
+
+---
+
 ## Optional: tell the agent more
 
 Add any of these lines when you send the template. All are optional.
@@ -81,6 +121,7 @@ Add any of these lines when you send the template. All are optional.
 - **Style:** (calm and simple, or playful and colorful)
 - **Cannot change:** (anything extra that must stay exactly as is)
 - **Ask me before:** (anything you want to approve first)
+- **Also make:** (a phone-playable web page; see the section above)
 
 ## Before you share it
 
@@ -89,3 +130,4 @@ Add any of these lines when you send the template. All are optional.
 - [ ] No names, photos, or handwriting
 - [ ] It looks right on the device it will be used on
 - [ ] You have permission to share the original
+- [ ] If there is a phone game: it opens by tapping the file, works with no internet, and has no outside links

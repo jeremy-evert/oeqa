@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#cfeef2">
+<meta name="color-scheme" content="light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Roll and Read">
+<title>Roll and Read</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='6' y='6' width='52' height='52' rx='12' fill='%23fff' stroke='%230d3b4a' stroke-width='5'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%230d3b4a'/%3E%3Ccircle cx='44' cy='20' r='5' fill='%230d3b4a'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%230d3b4a'/%3E%3Ccircle cx='20' cy='44' r='5' fill='%230d3b4a'/%3E%3Ccircle cx='44' cy='44' r='5' fill='%230d3b4a'/%3E%3C/svg%3E">
+<!--
+  ROLL AND READ: phone game version
+  One file. No internet needed. No accounts. Nothing leaves the device.
+
+  FROM THE TEACHER'S SHEET (locked, word for word): the title, the 24 words in
+  four rows, the six directions, the three Ways to Play, and the three tricky
+  words (Very, Every, Before).
+
+  NEW (not in the original, not educator-reviewed): everything that makes it a
+  game, including the animated die, sounds, stars, the trail, the word album,
+  "Hear it", partner scoreboard, and all the encouraging messages.
+  No answer key is supplied. The player taps whether they read each word right.
+-->
+<style>
+:root{
+  --sky:#cfeef2; --sky-d:#a9d9df; --navy:#0d3b4a; --teal:#0f5c68; --teal-l:#8ec5cd;
+  --sun:#ffc94d; --sun-d:#c0561c; --cream:#fff1cc; --card:#fffcf3; --good:#bfe8c9;
+  --shadow:rgba(13,59,74,.25);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{
+  background:var(--sky-d);color:var(--navy);
+  font-family:ui-rounded,"SF Pro Rounded","Nunito","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  font-size:18px;line-height:1.3;touch-action:manipulation;overscroll-behavior:none;
+  -webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;
+}
+h1,h2,h3,p,ol,ul{margin:0}
+[tabindex="-1"]:focus{outline:none}
+#app{position:relative;max-width:460px;height:100%;height:100dvh;margin:0 auto;background:var(--sky);overflow:hidden;box-shadow:0 0 0 3px rgba(13,59,74,.1)}
+
+/* ---------- scenery (mountains and sun) ---------- */
+.scenery{position:absolute;left:0;right:0;bottom:0;z-index:1;pointer-events:none;height:0;transition:height .4s ease}
+.scenery svg{position:absolute;inset:0;width:100%;height:100%}
+.scenery.big{height:150px}.scenery.mid{height:96px}.scenery.small{height:40px}
+.sun{position:absolute;right:9%;bottom:60%;width:46px;height:46px;border-radius:50%;background:var(--sun);border:3px solid var(--sun-d);transition:bottom 1.6s cubic-bezier(.2,.8,.2,1)}
+.scenery.small .sun,.scenery.none .sun{display:none}
+.scenery.rise .sun{bottom:150%}
+
+/* ---------- screens ---------- */
+.screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:2;overflow-y:auto;overflow-x:hidden;
+  padding:max(10px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom))}
+.screen.active{display:flex}
+.screen.pad-big{padding-bottom:max(160px,env(safe-area-inset-bottom))}
+.screen.pad-mid{padding-bottom:max(106px,env(safe-area-inset-bottom))}
+.screen.pad-small{padding-bottom:max(50px,env(safe-area-inset-bottom))}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;flex:none}
+.spacer{width:48px;flex:none}
+h1{font-size:clamp(52px,17vw,80px);line-height:.95;font-weight:900;letter-spacing:-.02em}
+h2{font-size:clamp(28px,8vw,36px);font-weight:900;line-height:1.05}
+h3{font-size:20px;font-weight:800}
+.sub{font-size:clamp(20px,5.6vw,26px);font-weight:800;color:var(--teal);line-height:1.15;margin-top:10px}
+.tiny{font-size:15px;color:var(--navy);margin-top:12px}
+.footnote{font-size:13px;line-height:1.3;margin-top:auto;padding-top:10px;color:var(--navy)}
+.linkbtn{font:inherit;background:none;border:0;padding:6px 2px;color:inherit;text-decoration:underline;font-weight:800;cursor:pointer;min-height:32px}
+
+/* ---------- buttons ---------- */
+.btn{font:inherit;font-weight:800;font-size:clamp(18px,5.2vw,22px);min-height:58px;padding:10px 18px;border-radius:18px;
+  border:3px solid var(--navy);background:var(--cream);color:var(--navy);box-shadow:0 5px 0 var(--navy);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;width:100%;text-align:center;line-height:1.15;
+  transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 var(--navy)}
+.btn.primary{background:var(--sun)}
+.btn.good{background:var(--good)}
+.btn.big{min-height:68px;font-size:clamp(22px,6.4vw,28px);border-radius:22px}
+.btn.small{min-height:48px;font-size:16px;padding:8px 10px;white-space:nowrap;box-shadow:0 3px 0 var(--navy);border-radius:14px}
+.btn .cnt{background:#fff;border:2px solid var(--navy);border-radius:999px;padding:0 8px;font-size:14px}
+.btn.small:active{transform:translateY(2px);box-shadow:0 1px 0 var(--navy)}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.btn:focus-visible,.iconbtn:focus-visible,.diebtn:focus-visible,.pickbtn:focus-visible,.acell:focus-visible,.linkbtn:focus-visible,.switch input:focus-visible+span{outline:4px solid var(--teal);outline-offset:3px}
+.iconbtn{font:inherit;font-weight:900;width:48px;height:48px;border-radius:50%;border:3px solid var(--navy);background:var(--cream);
+  color:var(--navy);display:grid;place-items:center;cursor:pointer;box-shadow:0 3px 0 var(--navy);flex:none;padding:0;font-size:22px}
+.iconbtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--navy)}
+.iconbtn svg{width:26px;height:26px;display:block}
+#soundBtn{position:absolute;z-index:30;top:max(10px,env(safe-area-inset-top));right:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ---------- dice ---------- */
+.die{--s:96px;width:var(--s);height:var(--s);background:#fff;border:4px solid var(--navy);border-radius:calc(var(--s)*.22);
+  display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:calc(var(--s)*.1);box-shadow:0 6px 0 var(--shadow);flex:none}
+.die i{display:block;width:68%;height:68%;margin:auto;border-radius:50%}
+.die i.on{background:var(--navy)}
+.die.mini{--s:34px;border-width:3px;box-shadow:none}
+.die.tiny5{--s:30px;border-width:3px;box-shadow:none}
+.diebtn{background:none;border:0;padding:6px;cursor:pointer;border-radius:30px;display:grid;place-items:center}
+.diebtn:active .die{transform:scale(.95)}
+.die.tumble{animation:tumble .95s cubic-bezier(.3,.7,.4,1)}
+.die.pop{animation:pop .35s ease}
+.die.idle{animation:idle 1.8s ease-in-out infinite}
+@keyframes tumble{0%{transform:translateY(0) rotate(0) scale(1)}20%{transform:translateY(-36px) rotate(120deg) scale(1.1)}45%{transform:translateY(0) rotate(250deg) scale(.95)}65%{transform:translateY(-16px) rotate(330deg) scale(1.05)}85%{transform:translateY(0) rotate(372deg) scale(.98)}100%{transform:translateY(0) rotate(360deg) scale(1)}}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes idle{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg) translateY(-4px)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(255,201,77,.55)}50%{box-shadow:0 0 0 9px rgba(255,201,77,.25)}}
+@keyframes rise{0%{transform:translateY(14px) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+
+/* ---------- title ---------- */
+#s-title .main{display:flex;flex-direction:column;flex:1;justify-content:center;gap:0;padding-bottom:6px}
+.hero-dice{display:flex;gap:16px;margin:clamp(12px,3vh,26px) 0}
+.hero-dice .die{--s:clamp(78px,24vw,108px)}
+.hero-dice .die:first-child{transform:rotate(-6deg)}
+.hero-dice .die:last-child{transform:rotate(7deg) translateY(6px)}
+.menu{display:flex;flex-direction:column;gap:14px}
+
+/* ---------- how / about ---------- */
+.dirs{list-style:none;padding:0;margin:14px 0 18px;display:flex;flex-direction:column;gap:10px;counter-reset:d}
+.dirs li{counter-increment:d;display:flex;gap:12px;align-items:flex-start;background:var(--card);border:3px solid var(--navy);border-radius:16px;padding:10px 12px;font-size:18px}
+.dirs li::before{content:counter(d);flex:none;width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;font-weight:900;display:grid;place-items:center;border:2px solid var(--navy)}
+.ways{list-style:none;padding:0;margin:10px 0 16px;display:flex;flex-direction:column;gap:8px}
+.ways li{background:var(--cream);border:3px solid var(--navy);border-radius:16px;padding:10px 12px;font-size:17px}
+.newbox{background:#fff;border:3px dashed var(--teal);border-radius:16px;padding:12px;margin:10px 0 16px;font-size:16px}
+.newbox ul{margin:6px 0 0;padding-left:20px}
+.newbox li{margin:3px 0}
+.newtag{display:inline-block;background:var(--sun);border:2px solid var(--navy);border-radius:999px;padding:0 9px;font-size:12px;font-weight:900;letter-spacing:.06em;vertical-align:middle;margin-right:6px}
+.copy p{margin:8px 0;font-size:17px}
+.copy h3{margin-top:16px}
+
+/* ---------- trail ---------- */
+.trail{display:flex;align-items:center;justify-content:center;flex:1;min-width:0}
+.node{--ns:clamp(32px,9.5vw,42px);width:var(--ns);height:var(--ns);border-radius:50%;background:var(--teal);color:#fff;font-weight:900;font-size:calc(var(--ns)*.5);
+  display:grid;place-items:center;border:3px solid var(--navy);position:relative;flex:none}
+.node.here{background:var(--sun);color:var(--navy);animation:pulse 1.6s ease-in-out infinite}
+.node .mark{position:absolute;right:-9px;top:-11px;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--navy);color:var(--navy);font-size:14px;line-height:1;display:grid;place-items:center}
+.seg{width:clamp(10px,4vw,26px);border-top:4px dotted var(--teal);flex:none}
+.sunicon{width:clamp(26px,7.4vw,34px);height:clamp(26px,7.4vw,34px);border-radius:50%;background:var(--sun);border:3px solid var(--sun-d);flex:none;margin-left:2px}
+
+/* ---------- play ---------- */
+.prompt{font-size:clamp(18px,5vw,22px);font-weight:800;text-align:center;line-height:1.25;min-height:2.6em;display:flex;align-items:center;justify-content:center;margin:6px 0 8px}
+.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,1.6vh,14px);flex:1 1 auto}
+.diebox{display:flex;flex-direction:column;align-items:center;min-height:clamp(120px,24vh,190px);justify-content:center;gap:4px}
+#pDie{--s:clamp(78px,15vh,112px)}
+.subline{min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:16px;font-weight:700;text-align:center}
+.picks{display:flex;gap:6px;margin-top:4px}
+.pickbtn{background:none;border:0;padding:3px;border-radius:12px;cursor:pointer;display:grid;place-items:center}
+.pickbtn:active .die{transform:scale(.9)}
+.actions{display:flex;flex-direction:column;gap:12px;margin-top:auto;padding-top:12px}
+
+/* ---------- flip card ---------- */
+.flip{perspective:900px;width:min(100%,340px);height:var(--ch,clamp(124px,24vh,220px));margin:0 auto;flex:none}
+.flip-in{position:relative;width:100%;height:100%;transition:transform .55s cubic-bezier(.3,.8,.3,1);transform-style:preserve-3d}
+.flip.up .flip-in{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:4px solid var(--navy);border-radius:26px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 8px 0 var(--shadow);overflow:hidden;text-align:center}
+.face.front{background:var(--teal);color:var(--cream)}
+.face.front .q{font-size:clamp(54px,14vh,96px);font-weight:900;line-height:1}
+.face.front .hint{font-size:16px;font-weight:700;margin-top:4px;padding:0 10px}
+.face.front::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;background:linear-gradient(135deg,transparent 49%,rgba(142,197,205,.35) 50%) 0 0/60px 100%}
+.face.back{background:var(--cream);transform:rotateY(180deg)}
+.word{font-size:clamp(36px,13.5vw,62px);font-weight:900;line-height:1.05;white-space:nowrap;max-width:100%}
+.letters{display:flex;gap:5px;justify-content:center;position:absolute;left:0;right:0;bottom:12px;opacity:0;transition:opacity .3s}
+.flip.show-letters .word{transform:translateY(-12px)}
+.word{transition:transform .3s}
+.letters span{min-width:28px;height:32px;border:2px solid var(--navy);border-radius:8px;background:#fff;font-weight:900;font-size:19px;display:grid;place-items:center;padding:0 4px}
+.flip.show-letters .letters{opacity:1}
+.tricky{position:absolute;top:10px;right:12px;background:var(--sun);border:2px solid var(--navy);border-radius:999px;padding:2px 10px;font-size:13px;font-weight:900;letter-spacing:.06em}
+.flip.sm{--ch:clamp(70px,12vh,116px)}
+.flip.sm .word{font-size:clamp(30px,10vw,46px)}
+.flip.sm .face.front .q{font-size:clamp(34px,8vh,52px)}
+.flip.sm .face{border-width:3px;border-radius:20px;box-shadow:0 5px 0 var(--shadow)}
+.flip.sm .tricky{font-size:11px;top:6px;right:8px}
+
+/* ---------- finish / album ---------- */
+.big-n{font-size:clamp(54px,16vw,76px);font-weight:900;line-height:1}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}
+.chip svg{width:22px;height:22px;flex:none}
+.chip{white-space:nowrap}
+.chip{font:inherit;background:var(--card);border:3px solid var(--navy);border-radius:999px;padding:6px 14px;font-weight:800;font-size:18px;color:var(--navy);display:inline-flex;gap:6px;align-items:center}
+button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
+.finish-body{animation:rise .5s ease both}
+.bar{height:16px;border:3px solid var(--navy);border-radius:999px;background:#fff;overflow:hidden;margin:8px 0 4px}
+.bar b{display:block;height:100%;background:var(--sun);width:0;transition:width .6s}
+.rowh{display:flex;align-items:center;gap:10px;margin:16px 0 8px}
+.badge{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--teal);color:#fff;border:3px solid var(--navy);font-weight:900;font-size:17px}
+.agrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.acell{font:inherit;color:var(--navy);position:relative;background:#e9f5f7;border:3px dashed var(--teal-l);border-radius:16px;min-height:78px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center}
+.acell b{font-size:clamp(16px,4.6vw,21px);font-weight:900}
+.acell .adie{display:block;line-height:0}
+.acell .adie .die{--s:26px;border-width:2px;padding:2px;border-radius:7px}
+.acell.got{background:var(--cream);border:3px solid var(--navy);cursor:pointer;box-shadow:0 3px 0 var(--navy)}
+.acell em{font-style:normal;font-size:10px;font-weight:900;letter-spacing:.06em;background:var(--sun);border:2px solid var(--navy);border-radius:999px;padding:0 6px}
+.acell .num{font-weight:900;font-size:14px;color:var(--teal)}
+
+/* ---------- partner ---------- */
+#s-partner{padding-left:12px;padding-right:12px;padding-bottom:max(10px,env(safe-area-inset-bottom));gap:6px}
+.pwrap{display:flex;flex-direction:column;flex:1;gap:6px;min-height:0}
+.panel{background:rgba(255,255,255,.55);border:3px solid var(--navy);border-radius:20px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0;justify-content:center}
+.facing .panel.top{transform:rotate(180deg)}
+.ph{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:17px}
+.pid{display:inline-flex;align-items:center;gap:6px}
+.pid svg{width:22px;height:22px}
+.pscore{background:#fff;border:2px solid var(--navy);border-radius:999px;padding:0 10px;font-size:16px}
+.prow{display:flex;align-items:center;gap:10px}
+.prow .die{--s:clamp(52px,9vh,76px)}
+.pside{flex:1;font-weight:700;font-size:15px;line-height:1.2}
+.psmall{display:grid;grid-template-columns:repeat(3,auto);gap:2px 4px;justify-content:start}
+.psmall .die{--s:34px;border-width:3px;box-shadow:none;padding:3px}
+.pmid{display:flex;flex-direction:column;gap:6px;align-items:stretch;justify-content:center;text-align:center;padding:2px 2px;flex:none}
+.pmid .mh{font-weight:900;font-size:15px;color:var(--teal)}
+.pmid .prompt{min-height:0;font-size:17px;margin:0}
+.judge{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.judge .btn{padding:6px 4px;font-size:15px;flex-direction:column;gap:2px;min-height:56px}
+.judge .btn svg{width:20px;height:20px}
+.switch{display:flex;align-items:center;gap:12px;background:var(--card);border:3px solid var(--navy);border-radius:16px;padding:12px;font-weight:700;font-size:17px;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch span.box{flex:none;width:34px;height:34px;border:3px solid var(--navy);border-radius:10px;background:#fff;display:grid;place-items:center;font-weight:900;font-size:22px}
+.switch input:checked+span.box::after{content:"\2713"}
+.switch input:checked+span.box{background:var(--good)}
+
+/* ---------- modal + confetti ---------- */
+.modal{position:absolute;inset:0;z-index:40;background:rgba(13,59,74,.55);display:flex;align-items:center;justify-content:center;padding:20px}
+.mcard{background:var(--card);border:4px solid var(--navy);border-radius:24px;padding:20px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 0 var(--shadow);animation:rise .25s ease both}
+.mcard p{font-size:17px}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@media (max-height:720px){
+  .hero-dice{display:none}
+  h1{font-size:clamp(40px,12vw,60px)}
+}
+@media (max-height:600px){
+  #pDie{--s:54px}
+  .subline{min-height:0}
+  .subline>span{display:none}
+  .flip{--ch:100px}
+  .word{font-size:clamp(32px,11vw,48px)}
+  .face.front .q{font-size:48px}
+  .btn.big{min-height:52px}
+  .btn.small{min-height:44px}
+  .prompt{font-size:17px;margin:12px 0 6px}
+  .letters{bottom:8px}.letters span{min-width:24px;height:26px;font-size:16px}
+}
+@media (max-height:660px){
+  #pDie{--s:62px}
+  .diebox{min-height:0}
+  .subline{min-height:40px}
+  .flip{--ch:clamp(104px,20vh,150px)}
+  .btn.big{min-height:58px}
+  .actions{gap:8px}
+  .prompt{min-height:0}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="scenery big" id="scenery" aria-hidden="true">
+  <svg viewBox="0 0 400 150" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,150 L0,86 L70,34 L130,80 L205,22 L272,82 L338,44 L400,90 L400,150 Z" fill="#8ec5cd"/>
+    <path d="M0,150 L0,124 L92,98 L172,121 L262,95 L342,118 L400,104 L400,150 Z" fill="#0f5c68"/>
+  </svg>
+  <div class="sun"></div>
+</div>
+
+<button class="iconbtn" id="soundBtn" aria-label="Sound is on. Tap to mute." aria-pressed="true"></button>
+
+<!-- ============ TITLE ============ -->
+<section class="screen active pad-big" id="s-title" aria-labelledby="t-title">
+  <div class="topbar"><span class="spacer"></span><span class="spacer"></span></div>
+  <div class="main">
+    <h1 id="t-title" tabindex="-1">Roll and<br>Read</h1>
+    <p class="sub">R-Controlled Vowels and Tricky Words</p>
+    <div class="hero-dice" aria-hidden="true" id="heroDice"></div>
+    <div class="menu">
+      <button class="btn primary big" data-go="solo">Play <span aria-hidden="true">&rsaquo;</span></button>
+      <button class="btn" data-go="pintro">Partner race</button>
+      <div class="row2">
+        <button class="btn small" data-go="how">How to play</button>
+        <button class="btn small" data-go="album">My words <span class="cnt" id="albumCount">0/24</span></button>
+      </div>
+    </div>
+    <p class="tiny">Grab a real die if you like. Four rows. Twenty-four words.</p>
+  </div>
+  <p class="footnote">Words and directions are from the teacher's sheet. Game parts are NEW and not educator-reviewed. <button class="linkbtn" data-go="about">About</button></p>
+</section>
+
+<!-- ============ HOW TO PLAY ============ -->
+<section class="screen pad-small" id="s-how" aria-labelledby="h-how">
+  <div class="topbar"><button class="iconbtn" data-go="title" aria-label="Back to start">&lsaquo;</button><span class="spacer"></span></div>
+  <h2 id="h-how" tabindex="-1">How to play</h2>
+  <ol class="dirs" id="dirs"></ol>
+  <h3>Ways to Play</h3>
+  <ul class="ways" id="ways"></ul>
+  <div class="newbox">
+    <span class="newtag">NEW</span><b>In this game</b>
+    <ul>
+      <li>The die rolls on screen. Using your own die? Tap its number instead.</li>
+      <li>Tap <b>Cover it</b> to hide the word, then <b>Uncover</b> to check.</li>
+      <li>You tap whether you read it right. That is your tally mark.</li>
+      <li><b>Partner race</b> has its own button on the start screen.</li>
+      <li><b>Write it</b> works great with a notebook beside you.</li>
+      <li><b>Sort it</b> is not in the game. Sorting needs a teacher's check.</li>
+    </ul>
+  </div>
+  <button class="btn primary big" data-go="solo">Play <span aria-hidden="true">&rsaquo;</span></button>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="screen pad-small copy" id="s-about" aria-labelledby="h-about">
+  <div class="topbar"><button class="iconbtn" data-go="title" aria-label="Back to start">&lsaquo;</button><span class="spacer"></span></div>
+  <h2 id="h-about" tabindex="-1">About this game</h2>
+  <h3>From the teacher's sheet</h3>
+  <p>The title, all 24 words, the directions, the Ways to Play, and the three tricky words (Very, Every, Before). They are shown word for word.</p>
+  <h3><span class="newtag">NEW</span>Added for the game</h3>
+  <p>The rolling die, sounds, stars, the trail, the word album, the Hear it button, the partner scoreboard, and every encouraging message. None of it is from the original sheet and none of it is educator-reviewed.</p>
+  <p>No answer key is supplied. The player (or a grown-up) taps whether a word was read right.</p>
+  <h3>Privacy</h3>
+  <p>No names, no accounts, no tracking, no internet. The word album is saved only on this device, in this browser, and you can clear it.</p>
+  <h3>For grown-ups</h3>
+  <p>Ten to fifteen minutes can be plenty. Stop sooner if they are tired. A few words, read happily, is a good day. Let your child try first and praise effort ("You sounded that out!"). If a word is stuck, say it together and move on.</p>
+  <p>Not a substitute for reading instruction. Permission to share the original sheet is not confirmed.</p>
+  <h3>Feedback for the teacher</h3>
+  <p>Could you use this tomorrow, and what would you change?</p>
+  <div style="height:12px"></div>
+  <button class="btn" data-go="title">Back</button>
+</section>
+
+<!-- ============ PLAY (solo) ============ -->
+<section class="screen pad-small" id="s-play" aria-label="Roll and Read game">
+  <div class="topbar">
+    <button class="iconbtn" data-act="leave" aria-label="Leave the game">&times;</button>
+    <div class="trail" id="trail"></div>
+    <span class="spacer"></span>
+  </div>
+  <p class="prompt" id="pPrompt" aria-live="polite"></p>
+  <div class="stage">
+    <div class="diebox">
+      <button class="diebtn" id="pDieBtn" data-act="roll" aria-label="Roll the die"><div class="die" id="pDie" aria-hidden="true"></div></button>
+      <div class="subline" id="pSub"></div>
+    </div>
+    <div class="flip" id="pCard">
+      <div class="flip-in">
+        <div class="face front" aria-hidden="true"><span class="q">?</span><span class="hint" id="pFrontHint">Roll to find your word</span></div>
+        <div class="face back" id="pBack">
+          <span class="tricky" id="pTricky" hidden>TRICKY</span>
+          <span class="word" id="pWord"></span>
+          <div class="letters" id="pLetters" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="actions" id="pActions"></div>
+</section>
+
+<!-- ============ PARTNER INTRO ============ -->
+<section class="screen pad-small" id="s-pintro" aria-labelledby="h-pintro">
+  <div class="topbar"><button class="iconbtn" data-go="title" aria-label="Back to start">&lsaquo;</button><span class="spacer"></span></div>
+  <h2 id="h-pintro" tabindex="-1">Partner race</h2>
+  <ul class="ways" style="margin-top:14px"><li><b>Partner race:</b> Both players roll, read their word, and the first correct reader earns a point.</li></ul>
+  <div class="newbox">
+    <span class="newtag">NEW</span><b>How it works here</b>
+    <ul>
+      <li>Four rounds, one for each row, A to D.</li>
+      <li>Each player taps their own die (or their own number if using a real die).</li>
+      <li>Both words flip up. Read them out loud.</li>
+      <li>A grown-up or the players tap who read first and got it right. Nobody right? Tap Neither.</li>
+      <li>After each round: cover it, spell it, uncover it to check.</li>
+    </ul>
+  </div>
+  <label class="switch"><input type="checkbox" id="facing" checked><span class="box" aria-hidden="true"></span><span>Players sit face to face. (The top side turns upside down so it reads right for them.)</span></label>
+  <div style="height:16px"></div>
+  <button class="btn primary big" data-go="partner">Start the race <span aria-hidden="true">&rsaquo;</span></button>
+</section>
+
+<!-- ============ PARTNER GAME ============ -->
+<section class="screen" id="s-partner" aria-label="Partner race">
+  <div class="topbar" style="min-height:44px"><button class="iconbtn" data-act="leave" aria-label="Leave the race" style="width:44px;height:44px">&times;</button><span class="mh" id="pRound" style="font-weight:900;color:var(--teal)"></span><span class="spacer"></span></div>
+  <div class="pwrap" id="pwrap"></div>
+</section>
+
+<!-- ============ FINISH ============ -->
+<section class="screen pad-mid" id="s-finish" aria-labelledby="f-title">
+  <div class="topbar"><span class="spacer"></span><span class="spacer"></span></div>
+  <div class="finish-body" id="finishBody"></div>
+</section>
+
+<!-- ============ ALBUM ============ -->
+<section class="screen pad-small" id="s-album" aria-labelledby="h-album">
+  <div class="topbar"><button class="iconbtn" data-go="title" aria-label="Back to start">&lsaquo;</button><span class="spacer"></span></div>
+  <h2 id="h-album" tabindex="-1">My words</h2>
+  <p style="margin-top:6px"><span class="newtag">NEW</span>Read a word right and it lands here. Tap a found word to hear it.</p>
+  <p style="margin-top:12px;font-weight:900" id="aCount"></p>
+  <div class="bar" aria-hidden="true"><b id="aBar"></b></div>
+  <div id="aGrid"></div>
+  <div style="height:16px"></div>
+  <button class="btn small" id="clearAlbum" data-act="clear">Clear my words</button>
+  <div style="height:8px"></div>
+  <button class="btn primary" data-go="solo">Play <span aria-hidden="true">&rsaquo;</span></button>
+</section>
+
+<!-- ============ MODAL ============ -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" hidden>
+  <div class="mcard">
+    <h2 id="mTitle" style="font-size:26px">Leave this game?</h2>
+    <p>Your trail so far will not be saved. Words already in your album stay there.</p>
+    <button class="btn primary" data-m="stay">Keep playing</button>
+    <button class="btn" data-m="leave">Leave</button>
+  </div>
+</div>
+
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(function(){
+'use strict';
+
+/* =====================================================================
+   LOCKED CONTENT: from the teacher's sheet, word for word. Do not edit.
+   ===================================================================== */
+const WORDS=[
+  ['Her','Church','First','Birthday','Third','Serve'],
+  ['Hurt','Turning','Thirst','Verse','Skirt','Burned'],
+  ['Squirm','Nurse','Songbird','Mercy','Large','Before'],
+  ['Mercy','Very','Birthday','Every','Thirst','Nurse']
+];
+const ROWS=['A','B','C','D'];
+const TRICKY=['Very','Every','Before'];
+const DIRECTIONS=[
+  'Roll a die.',
+  'Find the column that matches your number.',
+  'Read the word in that column in Row A. Then roll again for Row B, and keep going to Row D.',
+  'Cover the word, then spell it without looking (out loud or on paper). Uncover it to check.',
+  'Put a tally mark or a check next to each word you read correctly.',
+  'Challenge: use each word you read in a sentence.'
+];
+const WAYS=[
+  ['Partner race:','Both players roll, read their word, and the first correct reader earns a point.'],
+  ['Write it:','Roll, read the word, then write it on a whiteboard or in a notebook.'],
+  ['Sort it:','Collect the words and sort them by spelling pattern (er, ir, ur, ear, ar, or) and by tricky words (Very, Every, Before).']
+];
+/* ===================== end of locked content ===================== */
+
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const $=(s,r)=>(r||document).querySelector(s);
+const $$=(s,r)=>Array.prototype.slice.call((r||document).querySelectorAll(s));
+const reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TTS=('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);
+
+/* ---------- storage (safe if blocked) ---------- */
+const store={
+  get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,v)}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const ALBUM_KEY='roll-and-read-album-v1';
+function loadAlbum(){
+  try{const a=JSON.parse(store.get(ALBUM_KEY));if(Array.isArray(a)&&a.length===24)return a.map(Boolean)}catch(e){}
+  return Array(24).fill(false);
+}
+let album=loadAlbum();
+const saveAlbum=()=>store.set(ALBUM_KEY,JSON.stringify(album));
+let soundOn=store.get('roll-and-read-sound')!=='off';
+
+/* ---------- sound (made with the browser, no files) ---------- */
+let ac=null;
+function actx(){
+  if(!soundOn)return null;
+  if(!ac){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;try{ac=new C()}catch(e){return null}}
+  if(ac.state==='suspended'){try{ac.resume()}catch(e){}}
+  return ac;
+}
+function tone(f,d,type,v,at,f2){
+  const a=actx();if(!a)return;
+  try{
+    const t=a.currentTime+(at||0),o=a.createOscillator(),g=a.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(f,t);
+    if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v||.14,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+d+.03);
+  }catch(e){}
+}
+const sfx={
+  tick(i){tone(360+(i%4)*70,.05,'square',.04)},
+  land(){tone(170,.2,'sine',.22,0,70)},
+  reveal(){tone(523,.12,'triangle',.15);tone(784,.2,'triangle',.15,.1)},
+  flip(){tone(300,.14,'triangle',.08,0,560)},
+  good(){[523,659,784,1047].forEach((f,i)=>tone(f,.2,'triangle',.15,i*.08))},
+  soft(){tone(392,.22,'sine',.11);tone(330,.32,'sine',.09,.16)},
+  bonus(){[988,1319,1568].forEach((f,i)=>tone(f,.15,'sine',.11,i*.07))},
+  win(){[523,523,523,784,659,784,1047].forEach((f,i)=>tone(f,.24,'triangle',.15,i*.13))},
+  pop(){tone(600,.08,'sine',.1,0,900)}
+};
+const vib=p=>{try{if(navigator.vibrate)navigator.vibrate(p)}catch(e){}};
+function speak(w){
+  if(!TTS)return;
+  try{const u=new SpeechSynthesisUtterance(w);u.rate=.8;u.lang='en-US';speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}
+}
+
+/* ---------- confetti ---------- */
+const cv=$('#confetti'),cx=cv.getContext('2d');let parts=[],raf=0;
+const COL=['#ffc94d','#0f5c68','#8ec5cd','#e8833a','#fff1cc','#0d3b4a'];
+function sizeCv(){cv.width=window.innerWidth;cv.height=window.innerHeight}
+window.addEventListener('resize',sizeCv);sizeCv();
+function burst(x,y,n){
+  if(reduceMotion)return;
+  for(let i=0;i<(n||40);i++)parts.push({x:x,y:y,vx:(Math.random()-.5)*10,vy:-Math.random()*10-3,g:.38,r:4+Math.random()*5,c:COL[i%COL.length],a:Math.random()*6,va:(Math.random()-.5)*.4,life:70+Math.random()*30,sq:Math.random()<.5});
+  loop();
+}
+function rain(){
+  if(reduceMotion)return;
+  for(let i=0;i<90;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*2,vy:2+Math.random()*3.5,g:.02,r:4+Math.random()*5,c:COL[i%COL.length],a:Math.random()*6,va:(Math.random()-.5)*.3,life:260+Math.random()*60,sq:Math.random()<.6});
+  loop();
+}
+function loop(){
+  if(raf)return;
+  const step=()=>{
+    cx.clearRect(0,0,cv.width,cv.height);
+    parts=parts.filter(p=>p.life>0&&p.y<cv.height+30);
+    parts.forEach(p=>{
+      p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.a+=p.va;p.life--;
+      cx.save();cx.translate(p.x,p.y);cx.rotate(p.a);cx.fillStyle=p.c;cx.globalAlpha=Math.min(1,p.life/30);
+      if(p.sq)cx.fillRect(-p.r,-p.r/2,p.r*2,p.r);else{cx.beginPath();cx.arc(0,0,p.r/1.5,0,7);cx.fill()}
+      cx.restore();
+    });
+    if(parts.length)raf=requestAnimationFrame(step);else{raf=0;cx.clearRect(0,0,cv.width,cv.height)}
+  };
+  raf=requestAnimationFrame(step);
+}
+function stopConfetti(){parts=[];}
+
+/* ---------- dice ---------- */
+function dieMarkup(n,cls){
+  const on=PIPS[n]||[];let h='';
+  for(let i=0;i<9;i++)h+='<i'+(on.indexOf(i)>-1?' class="on"':'')+'></i>';
+  return '<div class="die '+(cls||'')+'" data-n="'+n+'" aria-hidden="true">'+h+'</div>';
+}
+function ensureDie(el){if(!el.children.length)el.innerHTML='<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>'}
+function setDie(el,n){
+  ensureDie(el);const on=PIPS[n]||[];el.dataset.n=n||'';
+  $$('i',el).forEach((d,i)=>d.classList.toggle('on',on.indexOf(i)>-1));
+}
+const randDie=()=>{
+  try{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%6+1}catch(e){return 1+Math.floor(Math.random()*6)}
+};
+function tumble(el,final,done){
+  if(reduceMotion){setDie(el,final);sfx.land();done();return}
+  el.classList.remove('tumble','pop','idle');void el.offsetWidth;el.classList.add('tumble');
+  let i=0;
+  const t=setInterval(()=>{setDie(el,1+Math.floor(Math.random()*6));sfx.tick(i++)},85);
+  setTimeout(()=>{
+    clearInterval(t);setDie(el,final);el.classList.remove('tumble');
+    sfx.land();vib(30);setTimeout(done,260);
+  },950);
+}
+function popDie(el,n){setDie(el,n);el.classList.remove('tumble','pop','idle');void el.offsetWidth;el.classList.add('pop');sfx.land();vib(20)}
+
+/* ---------- icons ---------- */
+const ICON_ON='<svg viewBox="0 0 24 24" fill="none" stroke="#0d3b4a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#ffc94d"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+const ICON_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="#0d3b4a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="#cfeef2"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+const ICON_SUN='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="#ffc94d" stroke="#c0561c" stroke-width="2.5"/></svg>';
+const ICON_MTN='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20L10 5l5 9 3-4 4 10z" fill="#0f5c68" stroke="#0d3b4a" stroke-width="2" stroke-linejoin="round"/></svg>';
+const ICON_SPK='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0d3b4a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>';
+
+function paintSound(){
+  const b=$('#soundBtn');b.innerHTML=soundOn?ICON_ON:ICON_OFF;
+  b.setAttribute('aria-pressed',soundOn?'true':'false');
+  b.setAttribute('aria-label',soundOn?'Sound is on. Tap to mute.':'Sound is off. Tap to turn on.');
+}
+
+/* ---------- screens ---------- */
+const SCENE={'s-title':'big','s-finish':'mid','s-play':'small'};
+let current='s-title';
+function show(id){
+  stopConfetti();if(TTS){try{speechSynthesis.cancel()}catch(e){}}
+  $$('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
+  const sc=$('#scenery');sc.className='scenery '+(SCENE[id]||'none');
+  current=id;
+  const sec=$('#'+id);sec.scrollTop=0;
+  const h=$('[tabindex="-1"]',sec);if(h){try{h.focus({preventScroll:true})}catch(e){}}
+}
+
+/* ---------- modal ---------- */
+let modalCb=null;
+function askLeave(cb){modalCb=cb;$('#modal').hidden=false;const b=$('[data-m="stay"]');if(b)b.focus()}
+function closeModal(){$('#modal').hidden=true;modalCb=null}
+
+/* =====================================================================
+   SOLO GAME
+   ===================================================================== */
+const game={row:0,step:'roll',n:0,res:[],rolling:false,id:0};
+const letterRow=w=>w.split('').map(c=>'<span>'+c+'</span>').join('');
+
+function startSolo(){
+  game.id++;game.row=0;game.step='roll';game.n=0;game.res=[];game.rolling=false;
+  setDie($('#pDie'),0);
+  $('#pCard').classList.remove('up','show-letters');
+  show('s-play');updatePlay();
+}
+function renderTrail(){
+  let h='';
+  for(let i=0;i<4;i++){
+    const r=game.res[i],here=i===game.row;
+    let label='Row '+ROWS[i];
+    if(r)label+=r.ok?', read correctly':', still practicing';
+    h+='<div class="node'+(here?' here':'')+'" role="img" aria-label="'+label+'">'+ROWS[i]+
+       (r?'<span class="mark" aria-hidden="true">'+(r.ok?'★':'○')+'</span>':'')+'</div>';
+    if(i<3)h+='<span class="seg"></span>';
+  }
+  h+='<span class="seg"></span><span class="sunicon" aria-hidden="true"></span>';
+  $('#trail').innerHTML=h;
+}
+function updatePlay(){
+  const g=game,L=ROWS[g.row],n=g.n,word=n?WORDS[g.row][n-1]:'';
+  renderTrail();
+  const card=$('#pCard');
+  if(word){
+    $('#pWord').textContent=word;
+    $('#pLetters').innerHTML=letterRow(word);
+    $('#pTricky').hidden=TRICKY.indexOf(word)<0;
+  }
+  const up=g.step==='read'||g.step==='check'||g.step==='result';
+  const wasUp=card.classList.contains('up');
+  card.classList.toggle('up',up);
+  card.classList.toggle('show-letters',g.step==='check');
+  $('#pBack').setAttribute('aria-hidden',up?'false':'true');
+  if(up!==wasUp)sfx.flip();
+  $('#pFrontHint').textContent=g.step==='cover'?'Spell it without looking':(g.step==='roll'?'Roll to find your word':'Your word is hiding');
+
+  const r=g.res[g.row];
+  let prompt='';
+  if(g.step==='roll')prompt='Row '+L+': Roll a die. Find your number. Read that word.';
+  else if(g.step==='read')prompt='You rolled a '+n+'! Read the word in column '+n+' out loud.';
+  else if(g.step==='cover')prompt='Cover it! Now spell it without looking (out loud or on paper).';
+  else if(g.step==='check')prompt='Uncover it to check. Did you read it right?';
+  else if(g.step==='result'){
+    prompt=r.ok?(r.isNew?'Nice! That is a tally mark, and a new word for your album!':'Nice reading! That is a tally mark.')
+               :'That is okay! Say it again with a grown-up or partner, then keep going.';
+  }
+  $('#pPrompt').textContent=prompt;
+
+  // die + sub line
+  const dieBtn=$('#pDieBtn');
+  dieBtn.disabled=g.step!=='roll'||g.rolling;
+  dieBtn.setAttribute('aria-label',g.step==='roll'?'Roll the die':'You rolled a '+n);
+  const sub=$('#pSub');
+  if(g.step==='roll'){
+    let p='<span>Using your own die? Tap your number:</span><div class="picks">';
+    for(let k=1;k<=6;k++)p+='<button class="pickbtn" data-pick="'+k+'" aria-label="I rolled a '+k+' on my own die">'+dieMarkup(k,'mini')+'</button>';
+    sub.innerHTML=p+'</div>';
+    const d=$('#pDie');d.classList.toggle('idle',!g.rolling&&!reduceMotion);
+  }else{
+    sub.innerHTML='<span>Row '+L+' · column '+n+'</span>';
+    $('#pDie').classList.remove('idle');
+  }
+
+  // actions
+  const hear=TTS?'<button class="btn small" data-act="hear">'+ICON_SPK+' Hear it</button>':'';
+  let a='';
+  if(g.step==='roll')a='<button class="btn primary big" data-act="roll">Roll the die</button>';
+  else if(g.step==='read')a='<button class="btn primary big" data-act="cover">Cover it</button>'+hear;
+  else if(g.step==='cover')a='<button class="btn primary big" data-act="uncover">Uncover to check</button>';
+  else if(g.step==='check')a='<button class="btn good big" data-act="right"><span aria-hidden="true">✓</span> I read it right</button><button class="btn" data-act="notyet">Still practicing</button>'+hear;
+  else if(g.step==='result'){
+    const last=g.row===3;
+    if(r.ok)a+=r.bonus?'<button class="btn" disabled>Challenge done! ★ +1</button>'
+                       :'<button class="btn" data-act="bonus">Challenge: say a sentence with “'+r.word+'”</button>';
+    a+='<button class="btn primary big" data-act="next">'+(last?'See my trail':'Next row')+' <span aria-hidden="true">›</span></button>';
+  }
+  $('#pActions').innerHTML=a;
+}
+function rollWithTumble(){
+  if(game.step!=='roll'||game.rolling)return;
+  const tok=game.id,die=$('#pDie'),final=randDie();
+  game.rolling=true;updatePlay();
+  tumble(die,final,()=>{
+    if(tok!==game.id)return;
+    game.n=final;game.rolling=false;game.step='read';sfx.reveal();updatePlay();
+  });
+}
+function rollOwn(n){
+  if(game.step!=='roll'||game.rolling)return;
+  const tok=game.id,die=$('#pDie');
+  game.rolling=true;updatePlay();popDie(die,n);
+  setTimeout(()=>{if(tok!==game.id)return;game.n=n;game.rolling=false;game.step='read';sfx.reveal();updatePlay()},380);
+}
+function mark(ok){
+  const g=game,w=WORDS[g.row][g.n-1],res={word:w,ok:ok,bonus:false,isNew:false};
+  if(ok){
+    const idx=g.row*6+g.n-1;
+    if(!album[idx]){album[idx]=true;res.isNew=true;saveAlbum()}
+    sfx.good();vib([30,40,30]);
+    const r=$('#pCard').getBoundingClientRect();burst(r.left+r.width/2,r.top+r.height/2,44);
+  }else sfx.soft();
+  g.res[g.row]=res;g.step='result';updatePlay();
+}
+function nextRow(){
+  if(game.row===3){finishSolo();return}
+  game.row++;game.step='roll';game.n=0;game.rolling=false;
+  setDie($('#pDie'),0);updatePlay();
+}
+function finishSolo(){
+  const res=game.res,right=res.filter(r=>r.ok),again=res.filter(r=>!r.ok),bonus=res.filter(r=>r.bonus).length;
+  const all=album.every(Boolean);
+  let title=right.length===4?'Perfect trail! You made it to the sun!':'You made it to the sun!';
+  let h='<h2 id="f-title" tabindex="-1">'+title+'</h2>';
+  h+='<p class="big-n" style="margin:10px 0 2px">'+right.length+' <span style="font-size:.4em">of 4</span></p><p style="font-weight:800;margin-bottom:10px">words read right'+(bonus?' · '+bonus+' challenge star'+(bonus>1?'s':''):'')+'</p>';
+  h+='<h3>Words I Read Correctly</h3><div class="chips">';
+  h+=right.length?right.map(r=>'<button class="chip" data-say="'+r.word+'" aria-label="'+r.word+'. Tap to hear it.">★ '+r.word+'</button>').join(''):'<span class="chip">None this time. Every trail makes it easier.</span>';
+  h+='</div>';
+  if(again.length){
+    h+='<h3>Try these again</h3><div class="chips">'+again.map(r=>'<button class="chip" data-say="'+r.word+'" aria-label="'+r.word+'. Tap to hear it.">○ '+r.word+'</button>').join('')+'</div>';
+  }
+  if(all)h+='<p style="font-weight:900;margin:0 0 12px"><span class="newtag">NEW</span>Your album is complete. All 24 words!</p>';
+  else h+='<p style="margin:0 0 12px">Album: '+album.filter(Boolean).length+' of 24 words found.</p>';
+  h+='<div class="actions" style="margin-top:6px"><button class="btn primary big" data-go="solo">Play again <span aria-hidden="true">›</span></button><div class="row2"><button class="btn small" data-go="album">My words</button><button class="btn small" data-go="title">Home</button></div></div>';
+  $('#finishBody').innerHTML=h;
+  show('s-finish');$('#scenery').classList.add('rise');
+  sfx.win();rain();vib([40,60,40,60,80]);
+}
+
+/* =====================================================================
+   PARTNER RACE
+   ===================================================================== */
+const P={row:0,scores:[0,0],rolls:[null,null],busy:[false,false],phase:'roll',msg:'',winner:null,id:0,built:false};
+function buildPartner(){
+  const mk=p=>
+   '<div class="panel '+(p===1?'top':'bot')+'" data-p="'+p+'">'+
+    '<div class="ph"><span class="pid">'+(p===0?ICON_SUN:ICON_MTN)+' Player '+(p+1)+'</span><span class="pscore" id="ps'+p+'"></span></div>'+
+    '<div class="prow"><button class="diebtn" data-pdie="'+p+'" id="pdb'+p+'" aria-label="Player '+(p+1)+': roll your die"><div class="die" id="pd'+p+'" aria-hidden="true"></div></button><div class="pside" id="pside'+p+'"></div></div>'+
+    '<div class="flip sm" id="pc'+p+'"><div class="flip-in"><div class="face front" aria-hidden="true"><span class="q">?</span></div>'+
+    '<div class="face back" id="pcb'+p+'"><span class="tricky" id="pt'+p+'" hidden>TRICKY</span><span class="word" id="pw'+p+'"></span></div></div></div>'+
+   '</div>';
+  $('#pwrap').innerHTML=mk(1)+'<div class="pmid" id="pmid"></div>'+mk(0);
+  P.built=true;
+}
+function startPartner(){
+  if(!P.built)buildPartner();
+  P.id++;P.row=0;P.scores=[0,0];P.rolls=[null,null];P.busy=[false,false];P.phase='roll';P.msg='';P.winner=null;
+  $('#s-partner').classList.toggle('facing',$('#facing').checked);
+  [0,1].forEach(p=>{setDie($('#pd'+p),0);$('#pc'+p).classList.remove('up')});
+  show('s-partner');updatePartner();
+}
+function updatePartner(){
+  const L=ROWS[P.row];
+  $('#pRound').textContent='Round '+(P.row+1)+' of 4 · Row '+L;
+  for(let p=0;p<2;p++){
+    $('#ps'+p).textContent='★ '+P.scores[p];
+    const rolled=P.rolls[p]!=null,both=P.rolls[0]!=null&&P.rolls[1]!=null;
+    const db=$('#pdb'+p);db.disabled=rolled||P.busy[p]||P.phase!=='roll';
+    const side=$('#pside'+p);
+    if(!rolled&&P.phase==='roll'){
+      let h='<div class="psmall">';
+      for(let k=1;k<=6;k++)h+='<button class="pickbtn" data-ppick="'+p+'-'+k+'" aria-label="Player '+(p+1)+' rolled a '+k+' on a real die">'+dieMarkup(k,'mini')+'</button>';
+      side.innerHTML=h+'</div>';
+    }else if(P.phase==='roll')side.textContent='Rolled! Waiting for your partner.';
+    else if(P.phase==='read')side.textContent='Read your word out loud!';
+    else side.textContent=(P.winner===p)?'★ Point for you!':'';
+    if(both){
+      const w=WORDS[P.row][P.rolls[p]-1];
+      $('#pw'+p).textContent=w;$('#pt'+p).hidden=TRICKY.indexOf(w)<0;
+    }
+    const wasUp=$('#pc'+p).classList.contains('up');
+    $('#pc'+p).classList.toggle('up',both);
+    $('#pcb'+p).setAttribute('aria-hidden',both?'false':'true');
+    if(both&&!wasUp&&p===0)sfx.flip();
+  }
+  const mid=$('#pmid');let h='';
+  if(P.phase==='roll')h='<p class="prompt">Both players roll. Find your number. Read your word.</p>';
+  else if(P.phase==='read'){
+    h='<p class="prompt">Who read first and got it right?</p><div class="judge">'+
+      '<button class="btn small" data-judge="0">'+ICON_SUN+'Player 1</button>'+
+      '<button class="btn small" data-judge="-1">Neither</button>'+
+      '<button class="btn small" data-judge="1">'+ICON_MTN+'Player 2</button></div>';
+  }else{
+    const last=P.row===3;
+    h='<p class="prompt" style="font-weight:900">'+P.msg+'</p><p class="mh" style="font-weight:700;color:var(--navy)">Then: cover it, spell it, uncover it to check.</p>'+
+      '<button class="btn primary small" data-act="pnext">'+(last?'See who won':'Next round')+' <span aria-hidden="true">›</span></button>';
+  }
+  mid.innerHTML=h;
+}
+function partnerRoll(p,n){
+  if(P.phase!=='roll'||P.rolls[p]!=null||P.busy[p])return;
+  const tok=P.id,die=$('#pd'+p);
+  P.busy[p]=true;updatePartner();
+  const land=v=>{
+    if(tok!==P.id)return;
+    P.busy[p]=false;P.rolls[p]=v;
+    if(P.rolls[0]!=null&&P.rolls[1]!=null){P.phase='read';sfx.reveal()}
+    updatePartner();
+  };
+  if(n){popDie(die,n);setTimeout(()=>land(n),380)}
+  else{const f=randDie();tumble(die,f,()=>land(f))}
+}
+function judge(who){
+  if(P.phase!=='read')return;
+  P.winner=who;
+  if(who===0||who===1){P.scores[who]++;P.msg='Point for Player '+(who+1)+'!';sfx.good();vib([30,40,30])}
+  else{P.msg='No point this round. On to the next!';sfx.soft()}
+  P.phase='judged';updatePartner();
+}
+function partnerNext(){
+  if(P.row===3){finishPartner();return}
+  P.row++;P.rolls=[null,null];P.busy=[false,false];P.phase='roll';P.winner=null;
+  [0,1].forEach(p=>{setDie($('#pd'+p),0);$('#pc'+p).classList.remove('up')});
+  updatePartner();
+}
+function finishPartner(){
+  const s=P.scores;let t,sub;
+  if(s[0]===s[1]){t='It is a tie!';sub='High fives all around.'}
+  else{const w=s[0]>s[1]?1:2;t='Player '+w+' wins!';sub='Great reading, both of you.'}
+  let h='<h2 id="f-title" tabindex="-1">'+t+'</h2><p style="font-weight:800;margin:8px 0 14px">'+sub+'</p>';
+  h+='<div class="chips"><span class="chip">'+ICON_SUN+' Player 1: ★ '+s[0]+'</span><span class="chip">'+ICON_MTN+' Player 2: ★ '+s[1]+'</span></div>';
+  h+='<div class="actions" style="margin-top:10px"><button class="btn primary big" data-go="partner">Race again <span aria-hidden="true">›</span></button><div class="row2"><button class="btn small" data-go="solo">Play solo</button><button class="btn small" data-go="title">Home</button></div></div>';
+  $('#finishBody').innerHTML=h;
+  show('s-finish');$('#scenery').classList.add('rise');
+  sfx.win();rain();vib([40,60,40,60,80]);
+}
+
+/* =====================================================================
+   ALBUM
+   ===================================================================== */
+let clearArmed=false;
+function renderAlbum(){
+  const n=album.filter(Boolean).length;
+  $('#aCount').textContent=n+' of 24 words found';
+  $('#aBar').style.width=(n/24*100)+'%';
+  let h='';
+  WORDS.forEach((row,r)=>{
+    h+='<h3 class="rowh"><span class="badge" aria-hidden="true">'+ROWS[r]+'</span>Row '+ROWS[r]+'</h3><div class="agrid">';
+    row.forEach((w,c)=>{
+      if(album[r*6+c])h+='<button class="acell got" data-say="'+w+'" aria-label="'+w+'. Tap to hear it."><span class="adie">'+dieMarkup(c+1)+'</span><b>'+w+'</b>'+(TRICKY.indexOf(w)>-1?'<em>TRICKY</em>':'')+'</button>';
+      else h+='<div class="acell" role="img" aria-label="Row '+ROWS[r]+', roll '+(c+1)+': not found yet"><span class="num">'+(c+1)+'</span><b aria-hidden="true">?</b></div>';
+    });
+    h+='</div>';
+  });
+  $('#aGrid').innerHTML=h;
+  clearArmed=false;$('#clearAlbum').textContent='Clear my words';
+}
+function updateAlbumCount(){$('#albumCount').textContent=album.filter(Boolean).length+'/24'}
+
+/* =====================================================================
+   WIRING
+   ===================================================================== */
+function go(name){
+  if(name==='title'){updateAlbumCount();show('s-title')}
+  else if(name==='solo')startSolo();
+  else if(name==='how')show('s-how');
+  else if(name==='about')show('s-about');
+  else if(name==='album'){renderAlbum();show('s-album')}
+  else if(name==='pintro')show('s-pintro');
+  else if(name==='partner')startPartner();
+}
+function leave(){
+  askLeave(()=>{game.id++;P.id++;go('title')});
+}
+
+document.addEventListener('click',e=>{
+  const t=e.target;
+  let el;
+  if((el=t.closest('[data-m]'))){const m=el.dataset.m,cb=modalCb;closeModal();if(m==='leave'&&cb)cb();return}
+  if(t.closest('#soundBtn')){soundOn=!soundOn;store.set('roll-and-read-sound',soundOn?'on':'off');paintSound();if(soundOn)sfx.pop();return}
+  actx(); // wake audio inside a tap
+  if((el=t.closest('[data-pick]'))){rollOwn(+el.dataset.pick);return}
+  if((el=t.closest('[data-ppick]'))){const a=el.dataset.ppick.split('-');partnerRoll(+a[0],+a[1]);return}
+  if((el=t.closest('[data-pdie]'))){partnerRoll(+el.dataset.pdie);return}
+  if((el=t.closest('[data-judge]'))){judge(+el.dataset.judge);return}
+  if((el=t.closest('[data-say]'))){speak(el.dataset.say);return}
+  if((el=t.closest('[data-go]'))){sfx.pop();go(el.dataset.go);return}
+  if((el=t.closest('[data-act]'))){
+    const a=el.dataset.act;
+    if(a==='roll')rollWithTumble();
+    else if(a==='cover'){game.step='cover';updatePlay()}
+    else if(a==='uncover'){game.step='check';updatePlay()}
+    else if(a==='right')mark(true);
+    else if(a==='notyet')mark(false);
+    else if(a==='hear'){speak(WORDS[game.row][game.n-1])}
+    else if(a==='bonus'){const r=game.res[game.row];if(r&&!r.bonus){r.bonus=true;sfx.bonus();vib(30);const b=el.getBoundingClientRect();burst(b.left+b.width/2,b.top,28);updatePlay()}}
+    else if(a==='next')nextRow();
+    else if(a==='pnext')partnerNext();
+    else if(a==='leave')leave();
+    else if(a==='clear'){
+      if(!clearArmed){clearArmed=true;el.textContent='Tap again to clear all words'}
+      else{album=Array(24).fill(false);saveAlbum();renderAlbum()}
+    }
+  }
+});
+// keyboard: number keys pick a die number, Escape closes the dialog
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!$('#modal').hidden){closeModal();return}
+  if(current==='s-play'&&/^[1-6]$/.test(e.key)&&!e.metaKey&&!e.ctrlKey)rollOwn(+e.key);
+});
+
+// build the static bits from the locked content
+$('#dirs').innerHTML=DIRECTIONS.map(d=>'<li>'+d+'</li>').join('');
+$('#ways').innerHTML=WAYS.map(w=>'<li><b>'+w[0]+'</b> '+w[1]+'</li>').join('');
+$('#heroDice').innerHTML=dieMarkup(4)+dieMarkup(2);
+paintSound();updateAlbumCount();setDie($('#pDie'),0);
+})();
+</script>
+</body>
+</html>
