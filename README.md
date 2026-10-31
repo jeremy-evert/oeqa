@@ -31,7 +31,7 @@ That's it. You should get back a finished document and a short list of things to
 
 ## Bonus: turn it into a phone game
 
-If your document is really an activity (a dice game, a word list, a practice sheet), the AI can also build a small game from it that opens on a phone. The example in `examples/final/` does this for the Roll and Read worksheet. It is a single file. There is nothing to install, no account, and no internet needed once the file is on the phone. It keeps every word and direction exactly as written, labels everything it adds as NEW, and collects nothing.
+If your document is really an activity (a dice game, a word list, a practice sheet), the AI can also build a small game from it that opens on a phone. The example in `examples/final/` does this for the Roll and Read worksheet. It is a single file. There is nothing to install, no account, and no internet needed once the file is on the phone. It keeps every word and direction exactly as written, labels everything it adds as NEW, and collects nothing. The player can type the word they read to check their spelling, and can type a sentence using the word. Typed spelling and sentences stay on the phone, are never saved or sent anywhere, and the page asks players not to type names. A microphone button is there too, but it starts off and a grown-up has to turn it on. On many phones, voice typing sends audio to the phone maker's cloud service, so it is optional.
 
 To get one for your own document, add this line when you send the template:
 

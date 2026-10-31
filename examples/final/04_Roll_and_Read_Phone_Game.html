@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="theme-color" content="#cfeef2">
 <meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -40,6 +40,7 @@ body{
 }
 h1,h2,h3,p,ol,ul{margin:0}
 [tabindex="-1"]:focus{outline:none}
+input,textarea{-webkit-user-select:text;user-select:text}
 #app{position:relative;max-width:460px;height:100%;height:100dvh;margin:0 auto;background:var(--sky);overflow:hidden;box-shadow:0 0 0 3px rgba(13,59,74,.1)}
 
 /* ---------- scenery (mountains and sun) ---------- */
@@ -171,6 +172,33 @@ h3{font-size:20px;font-weight:800}
 .flip.sm .face{border-width:3px;border-radius:20px;box-shadow:0 5px 0 var(--shadow)}
 .flip.sm .tricky{font-size:11px;top:6px;right:8px}
 
+/* ---------- typing, sentence, voice (NEW) ---------- */
+#pPanel{width:min(100%,340px);margin:0 auto;display:flex;flex-direction:column;gap:6px;flex:none}
+#pPanel:empty{display:none}
+.plabel{font-weight:800;font-size:16px;text-align:center;line-height:1.2}
+.inrow{display:flex;gap:8px;align-items:stretch}
+.field{font:inherit;font-weight:800;font-size:22px;letter-spacing:.05em;flex:1;min-width:0;min-height:56px;border:3px solid var(--navy);
+  border-radius:16px;padding:8px 12px;background:#fff;color:var(--navy);text-align:center;box-shadow:inset 0 3px 0 rgba(13,59,74,.12)}
+.field::placeholder{color:#6d8a93;font-weight:700;letter-spacing:0}
+.field:focus{outline:4px solid var(--teal);outline-offset:2px}
+textarea.field{font-size:18px;letter-spacing:0;text-align:left;resize:none;line-height:1.25;min-height:84px}
+.micbtn{width:56px;height:auto;min-height:56px;border-radius:16px;align-self:stretch}
+.micbtn.on{background:var(--sun);animation:pulse 1.2s ease-in-out infinite}
+.phint{font-size:15px;font-weight:700;text-align:center;min-height:1.3em;line-height:1.25}
+.typed{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.typed .t{min-width:30px;height:46px;border:3px solid var(--navy);border-radius:10px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:18px;line-height:1.05;padding:0 4px}
+.typed .t small{font-size:15px;font-weight:900}
+.typed .t.ok{background:var(--good)}
+.typed .t.no{background:#ffe3d3;border-style:dashed}
+.sentbox{background:var(--card);border:3px solid var(--navy);border-radius:14px;padding:8px 12px;font-weight:700;font-size:17px;text-align:left;-webkit-user-select:text;user-select:text}
+.sentrow{display:flex;flex-direction:column;gap:6px;align-items:flex-start;margin-bottom:10px}
+.flip.compact{--ch:clamp(96px,15vh,130px)}
+.flip.compact .word{font-size:clamp(30px,10vw,46px)}
+.flip.compact .face.front .q{font-size:44px}
+.flip.compact .letters{display:none}
+.flip.compact.show-letters .word{transform:none}
+.stage.nodie .diebox{min-height:0}
+
 /* ---------- finish / album ---------- */
 .big-n{font-size:clamp(54px,16vw,76px);font-weight:900;line-height:1}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}
@@ -242,6 +270,9 @@ button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
   .btn.small{min-height:44px}
   .prompt{font-size:17px;margin:12px 0 6px}
   .letters{bottom:8px}.letters span{min-width:24px;height:26px;font-size:16px}
+  .field{min-height:48px}
+  textarea.field{min-height:60px}
+  .micbtn{min-height:48px}
 }
 @media (max-height:660px){
   #pDie{--s:62px}
@@ -299,7 +330,10 @@ button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
     <ul>
       <li>The die rolls on screen. Using your own die? Tap its number instead.</li>
       <li>Tap <b>Cover it</b> to hide the word, then <b>Uncover</b> to check.</li>
+      <li>You can type your spelling in the box. The game shows which letters match.</li>
       <li>You tap whether you read it right. That is your tally mark.</li>
+      <li>The Challenge has a box for your sentence. Sentences are not saved.</li>
+      <li>A microphone button can type for you, but only if a grown-up turns voice on.</li>
       <li><b>Partner race</b> has its own button on the start screen.</li>
       <li><b>Write it</b> works great with a notebook beside you.</li>
       <li><b>Sort it</b> is not in the game. Sorting needs a teacher's check.</li>
@@ -315,10 +349,11 @@ button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
   <h3>From the teacher's sheet</h3>
   <p>The title, all 24 words, the directions, the Ways to Play, and the three tricky words (Very, Every, Before). They are shown word for word.</p>
   <h3><span class="newtag">NEW</span>Added for the game</h3>
-  <p>The rolling die, sounds, stars, the trail, the word album, the Hear it button, the partner scoreboard, and every encouraging message. None of it is from the original sheet and none of it is educator-reviewed.</p>
-  <p>No answer key is supplied. The player (or a grown-up) taps whether a word was read right.</p>
+  <p>The rolling die, sounds, stars, the trail, the word album, the Hear it button, the spelling box, the sentence box, the optional voice button, the partner scoreboard, and every encouraging message. None of it is from the original sheet and none of it is educator-reviewed.</p>
+  <p>No answer key is supplied. The player (or a grown-up) taps whether a word was read right. The spelling box only compares what was typed with the word on the sheet.</p>
   <h3>Privacy</h3>
-  <p>No names, no accounts, no tracking, no internet. The word album is saved only on this device, in this browser, and you can clear it.</p>
+  <p>No names, no accounts, no tracking. The game does not need the internet. The word album is saved only on this device, in this browser, and you can clear it. Typed spelling and sentences are never saved or sent anywhere. Please do not type names.</p>
+  <p><span class="newtag">NEW</span><b>Voice is optional and starts off.</b> If a grown-up turns it on, the microphone button lets a student say the letters or a sentence. On many phones that sends the voice to the phone maker's speech service to turn it into words, so it is not private or offline, and it is not always right with letters. Typing always works.</p>
   <h3>For grown-ups</h3>
   <p>Ten to fifteen minutes can be plenty. Stop sooner if they are tired. A few words, read happily, is a good day. Let your child try first and praise effort ("You sounded that out!"). If a word is stuck, say it together and move on.</p>
   <p>Not a substitute for reading instruction. Permission to share the original sheet is not confirmed.</p>
@@ -336,7 +371,7 @@ button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
     <span class="spacer"></span>
   </div>
   <p class="prompt" id="pPrompt" aria-live="polite"></p>
-  <div class="stage">
+  <div class="stage" id="pStage">
     <div class="diebox">
       <button class="diebtn" id="pDieBtn" data-act="roll" aria-label="Roll the die"><div class="die" id="pDie" aria-hidden="true"></div></button>
       <div class="subline" id="pSub"></div>
@@ -351,6 +386,7 @@ button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
         </div>
       </div>
     </div>
+    <div id="pPanel"></div>
   </div>
   <div class="actions" id="pActions"></div>
 </section>
@@ -404,10 +440,10 @@ button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
 <!-- ============ MODAL ============ -->
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" hidden>
   <div class="mcard">
-    <h2 id="mTitle" style="font-size:26px">Leave this game?</h2>
-    <p>Your trail so far will not be saved. Words already in your album stay there.</p>
-    <button class="btn primary" data-m="stay">Keep playing</button>
-    <button class="btn" data-m="leave">Leave</button>
+    <h2 id="mTitle" style="font-size:26px"></h2>
+    <p id="mText"></p>
+    <button class="btn primary" id="mA" data-m="no"></button>
+    <button class="btn" id="mB" data-m="yes"></button>
   </div>
 </div>
 
@@ -575,7 +611,7 @@ function paintSound(){
 const SCENE={'s-title':'big','s-finish':'mid','s-play':'small'};
 let current='s-title';
 function show(id){
-  stopConfetti();if(TTS){try{speechSynthesis.cancel()}catch(e){}}
+  stopConfetti();stopListen();if(TTS){try{speechSynthesis.cancel()}catch(e){}}
   $$('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
   const sc=$('#scenery');sc.className='scenery '+(SCENE[id]||'none');
   current=id;
@@ -583,19 +619,106 @@ function show(id){
   const h=$('[tabindex="-1"]',sec);if(h){try{h.focus({preventScroll:true})}catch(e){}}
 }
 
-/* ---------- modal ---------- */
+/* ---------- modal (the first button is always the safe choice) ---------- */
 let modalCb=null;
-function askLeave(cb){modalCb=cb;$('#modal').hidden=false;const b=$('[data-m="stay"]');if(b)b.focus()}
+function openModal(o){
+  modalCb=o.cb||null;
+  $('#mTitle').textContent=o.title;$('#mText').textContent=o.text;
+  $('#mA').textContent=o.a;$('#mB').textContent=o.b;
+  $('#modal').hidden=false;$('#mA').focus();
+}
 function closeModal(){$('#modal').hidden=true;modalCb=null}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cleanLetters=s=>String(s||'').toLowerCase().replace(/[^a-z]/g,'');
+
+/* =====================================================================
+   NEW: optional voice (off until a grown-up turns it on)
+   Uses the phone's built-in speech recognition, if it has one. On many
+   phones that sends the voice to the phone maker's speech service, so it
+   is NOT private or offline. Typing always works without it.
+   ===================================================================== */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const VOICE=!!SR;
+let voiceOK=false,rec=null,listening=false;
+const LETTER_SOUNDS={a:'a ay eh',b:'b be bee',c:'c see sea',d:'d dee',e:'e ee',f:'f eff ef',g:'g gee',h:'h aitch',i:'i eye aye',
+  j:'j jay',k:'k kay',l:'l el ell',m:'m em',n:'n en',o:'o oh owe',p:'p pee pea',q:'q queue cue',r:'r are',s:'s ess',t:'t tee tea',
+  u:'u you ewe',v:'v vee',w:'w',x:'x ex',y:'y why wye',z:'z zee zed'};
+const SOUND2LETTER={};
+Object.keys(LETTER_SOUNDS).forEach(L=>LETTER_SOUNDS[L].split(' ').forEach(s=>{SOUND2LETTER[s]=L}));
+// Turns what the phone heard ("bee eye are tee...") into letters. A whole spoken
+// word (like "birthday") is NOT accepted as spelling, so saying the word can't pass as spelling it.
+function lettersFrom(text){
+  const toks=String(text).toLowerCase().replace(/[^a-z\s-]/g,' ').split(/[\s-]+/).filter(Boolean);
+  let out='';
+  for(let i=0;i<toks.length;i++){
+    const t=toks[i];
+    if(t==='double'&&(toks[i+1]==='you'||toks[i+1]==='u')){out+='w';i++;continue}
+    if(SOUND2LETTER[t])out+=SOUND2LETTER[t];
+  }
+  return out;
+}
+const ICON_MIC='<svg viewBox="0 0 24 24" fill="none" stroke="#0d3b4a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="#ffc94d"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+const micBtn=kind=>'<button class="iconbtn micbtn" data-act="mic" data-kind="'+kind+'" aria-pressed="false" aria-label="Say it instead of typing">'+ICON_MIC+'</button>';
+function micUI(on){
+  $$('.micbtn').forEach(b=>{b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');
+    b.setAttribute('aria-label',on?'Listening. Tap to stop.':'Say it instead of typing')});
+}
+function stopListen(){
+  if(rec){try{rec.abort()}catch(e){}rec=null}
+  listening=false;micUI(false);
+}
+function syncUncoverLabel(){
+  const b=$('#pActions [data-act="uncover"]');
+  if(b)b.textContent=cleanLetters(game.typed)?'Check my spelling':'Uncover to check';
+}
+function startListen(kind){
+  if(!VOICE)return;
+  stopListen();
+  const target=$(kind==='spell'?'#spellIn':'#sentIn');if(!target)return;
+  const hint=m=>{const h=$(kind==='spell'?'#spellHint':'#sentHint');if(h)h.textContent=m};
+  const base=kind==='sent'&&target.value.trim()?target.value.trim()+' ':'';
+  let r;
+  try{r=new SR()}catch(e){hint('Voice did not start. You can type instead.');return}
+  r.lang='en-US';r.interimResults=true;r.maxAlternatives=1;r.continuous=false;
+  r.onstart=()=>{listening=true;micUI(true);hint(kind==='spell'?'Listening… say the letters one at a time.':'Listening… say your sentence.')};
+  r.onresult=e=>{
+    let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript+' ';t=t.trim();
+    if(kind==='spell'){
+      const L=lettersFrom(t);
+      if(L){target.value=L;game.typed=L;syncUncoverLabel();hint('I heard: '+L.toUpperCase().split('').join(' ')+'. Fix any letter by typing.')}
+      else hint('I heard “'+t+'”. Try saying the letters one at a time.');
+    }else{target.value=base+t;game.sentDraft=target.value}
+  };
+  r.onerror=e=>{
+    hint(e.error==='not-allowed'||e.error==='service-not-allowed'?'The microphone is blocked here. You can type instead.'
+        :e.error==='no-speech'?'I did not hear anything. Tap the microphone and try again.'
+        :'Voice did not work. You can type instead.');
+  };
+  r.onend=()=>{listening=false;micUI(false);rec=null};
+  rec=r;
+  try{r.start()}catch(e){listening=false;micUI(false);hint('Voice did not start. You can type instead.')}
+}
+function micClick(kind){
+  if(!VOICE)return;
+  if(listening){stopListen();return}
+  if(!voiceOK){
+    openModal({title:'Turn on voice?',
+      text:'Voice lets you say the letters or your sentence instead of typing. On many phones, your voice is sent to the phone maker’s speech service to turn it into words, so it is not private or offline, and it is not always right with letters. Ask a grown-up first. Nothing is saved.',
+      a:'No thanks',b:'Turn on voice',cb:()=>{voiceOK=true;startListen(kind)}});
+    return;
+  }
+  startListen(kind);
+}
 
 /* =====================================================================
    SOLO GAME
    ===================================================================== */
-const game={row:0,step:'roll',n:0,res:[],rolling:false,id:0};
+const game={row:0,step:'roll',n:0,res:[],rolling:false,id:0,typed:'',spellOk:null,sentMode:false,sentDraft:'',lastTry:''};
 const letterRow=w=>w.split('').map(c=>'<span>'+c+'</span>').join('');
+function resetRowState(){game.typed='';game.spellOk=null;game.sentMode=false;game.sentDraft='';game.lastTry=''}
 
 function startSolo(){
-  game.id++;game.row=0;game.step='roll';game.n=0;game.res=[];game.rolling=false;
+  game.id++;game.row=0;game.step='roll';game.n=0;game.res=[];game.rolling=false;resetRowState();
   setDie($('#pDie'),0);
   $('#pCard').classList.remove('up','show-letters');
   show('s-play');updatePlay();
@@ -615,6 +738,7 @@ function renderTrail(){
 }
 function updatePlay(){
   const g=game,L=ROWS[g.row],n=g.n,word=n?WORDS[g.row][n-1]:'';
+  stopListen();
   renderTrail();
   const card=$('#pCard');
   if(word){
@@ -634,16 +758,22 @@ function updatePlay(){
   let prompt='';
   if(g.step==='roll')prompt='Row '+L+': Roll a die. Find your number. Read that word.';
   else if(g.step==='read')prompt='You rolled a '+n+'! Read the word in column '+n+' out loud.';
-  else if(g.step==='cover')prompt='Cover it! Now spell it without looking (out loud or on paper).';
+  else if(g.step==='cover')prompt='Cover it! Now spell it without looking (out loud, on paper, or type it below).';
   else if(g.step==='check')prompt='Uncover it to check. Did you read it right?';
   else if(g.step==='result'){
-    prompt=r.ok?(r.isNew?'Nice! That is a tally mark, and a new word for your album!':'Nice reading! That is a tally mark.')
+    if(g.sentMode)prompt='Challenge: use the word in a sentence, then read it out loud!';
+    else if(r.ok&&r.sentence)prompt='Great sentence! Now read it out loud!';
+    else prompt=r.ok?(r.isNew?'Nice! That is a tally mark, and a new word for your album!':'Nice reading! That is a tally mark.')+(r.spell?' You spelled it right too!':'')
                :'That is okay! Say it again with a grown-up or partner, then keep going.';
   }
   $('#pPrompt').textContent=prompt;
 
-  // die + sub line
+  // die + sub line (the die steps aside while typing so the keyboard has room)
+  const hideDie=g.step==='cover'||g.step==='check'||g.step==='result';
+  $('#pStage').classList.toggle('nodie',hideDie);
+  card.classList.toggle('compact',g.step==='cover'||(g.step==='check'&&!!g.typed)||(g.step==='result'&&g.sentMode));
   const dieBtn=$('#pDieBtn');
+  dieBtn.hidden=hideDie;
   dieBtn.disabled=g.step!=='roll'||g.rolling;
   dieBtn.setAttribute('aria-label',g.step==='roll'?'Roll the die':'You rolled a '+n);
   const sub=$('#pSub');
@@ -662,15 +792,79 @@ function updatePlay(){
   let a='';
   if(g.step==='roll')a='<button class="btn primary big" data-act="roll">Roll the die</button>';
   else if(g.step==='read')a='<button class="btn primary big" data-act="cover">Cover it</button>'+hear;
-  else if(g.step==='cover')a='<button class="btn primary big" data-act="uncover">Uncover to check</button>';
+  else if(g.step==='cover')a='<button class="btn primary big" data-act="uncover">'+(cleanLetters(g.typed)?'Check my spelling':'Uncover to check')+'</button>';
   else if(g.step==='check')a='<button class="btn good big" data-act="right"><span aria-hidden="true">✓</span> I read it right</button><button class="btn" data-act="notyet">Still practicing</button>'+hear;
   else if(g.step==='result'){
     const last=g.row===3;
-    if(r.ok)a+=r.bonus?'<button class="btn" disabled>Challenge done! ★ +1</button>'
-                       :'<button class="btn" data-act="bonus">Challenge: say a sentence with “'+r.word+'”</button>';
-    a+='<button class="btn primary big" data-act="next">'+(last?'See my trail':'Next row')+' <span aria-hidden="true">›</span></button>';
+    if(g.sentMode){
+      a='<button class="btn primary big" data-act="savesent">Save my sentence ★</button><button class="btn small" data-act="skipsent">Skip the challenge</button>';
+    }else{
+      if(r.ok)a+=r.bonus?'<button class="btn" disabled>Challenge done! ★ +1</button>'
+                         :'<button class="btn" data-act="bonus">Challenge: write a sentence with “'+r.word+'”</button>';
+      a+='<button class="btn primary big" data-act="next">'+(last?'See my trail':'Next row')+' <span aria-hidden="true">›</span></button>';
+    }
   }
   $('#pActions').innerHTML=a;
+  renderPanel();
+}
+
+// NEW: the typing box, spelling feedback, and sentence box live in one panel under the card
+function renderPanel(){
+  const g=game,p=$('#pPanel'),r=g.res[g.row],word=g.n?WORDS[g.row][g.n-1]:'';
+  let h='';
+  if(g.step==='cover'){
+    h='<label class="plabel" for="spellIn">Type your spelling (optional)</label>'+
+      '<div class="inrow"><input class="field" id="spellIn" type="text" inputmode="text" enterkeyhint="done" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="24" placeholder="type it here" aria-describedby="spellHint">'+(VOICE?micBtn('spell'):'')+'</div>'+
+      '<p class="phint" id="spellHint" aria-live="polite"></p>';
+  }else if(g.step==='check'&&g.typed){
+    const w=word.toLowerCase(),t=g.typed,len=Math.max(w.length,t.length);let tiles='';
+    for(let i=0;i<len;i++){
+      const a=t[i],same=a!==undefined&&a===w[i];
+      tiles+='<span class="t '+(same?'ok':'no')+'" aria-label="'+(a===undefined?'missing letter':'letter '+a+(same?', matches':', does not match'))+'"><span aria-hidden="true">'+(a===undefined?'_':a.toUpperCase())+'</span><small aria-hidden="true">'+(same?'✓':'✗')+'</small></span>';
+    }
+    h='<p class="plabel">You typed</p><div class="typed">'+tiles+'</div><p class="phint">'+(g.spellOk?'✎ You spelled it right!':'So close! Check the letters marked ✗.')+'</p>';
+  }else if(g.step==='result'){
+    if(g.sentMode){
+      h='<label class="plabel" for="sentIn">Your sentence with “'+word+'”. No names, please.</label>'+
+        '<div class="inrow"><textarea class="field" id="sentIn" rows="2" maxlength="140" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" spellcheck="true" placeholder="Type your sentence" aria-describedby="sentHint"></textarea>'+(VOICE?micBtn('sent'):'')+'</div>'+
+        '<p class="phint" id="sentHint" aria-live="polite"></p>';
+    }else if(r&&r.sentence){
+      h='<p class="plabel">My sentence</p><p class="sentbox">'+esc(r.sentence)+'</p>';
+    }
+  }
+  p.innerHTML=h;
+  const si=$('#spellIn');if(si)si.value=g.typed||'';
+  const se=$('#sentIn');if(se)se.value=g.sentDraft||'';
+}
+function doUncover(){
+  if(game.step!=='cover')return;
+  const word=WORDS[game.row][game.n-1].toLowerCase(),t=cleanLetters(game.typed);
+  game.typed=t;game.spellOk=t?t===word:null;
+  try{if(document.activeElement)document.activeElement.blur()}catch(e){}
+  game.step='check';updatePlay();
+  if(game.spellOk)sfx.bonus();
+}
+function startSentence(){
+  game.sentMode=true;game.sentDraft='';game.lastTry='';updatePlay();
+  const s=$('#sentIn');
+  if(s){s.focus();setTimeout(()=>{try{s.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}},300)}
+}
+function saveSentence(){
+  const r=game.res[game.row];if(!r||!game.sentMode)return;
+  const el=$('#sentIn'),text=(el?el.value:game.sentDraft).replace(/\s+/g,' ').trim();
+  game.sentDraft=text;
+  const hint=m=>{const h=$('#sentHint');if(h)h.textContent=m};
+  const count=text.split(' ').filter(Boolean).length;
+  let problem='';
+  if(count<3)problem='Try a few more words. A sentence tells a whole idea.';
+  else if(!new RegExp('\\b'+r.word+'(s|es|ing)?\\b','i').test(text))problem='Try to use the word “'+r.word+'” in your sentence.';
+  // kind to kids: a second tap on Save keeps the sentence exactly as written
+  if(problem&&!(text&&game.lastTry===text)){game.lastTry=text;hint(problem+(text?' Tap Save again to keep it as it is.':''));return}
+  r.sentence=text;r.bonus=true;game.sentMode=false;
+  sfx.bonus();vib(30);
+  const b=$('#pCard').getBoundingClientRect();burst(b.left+b.width/2,b.top+b.height/2,36);
+  try{if(document.activeElement)document.activeElement.blur()}catch(e){}
+  updatePlay();
 }
 function rollWithTumble(){
   if(game.step!=='roll'||game.rolling)return;
@@ -688,7 +882,7 @@ function rollOwn(n){
   setTimeout(()=>{if(tok!==game.id)return;game.n=n;game.rolling=false;game.step='read';sfx.reveal();updatePlay()},380);
 }
 function mark(ok){
-  const g=game,w=WORDS[g.row][g.n-1],res={word:w,ok:ok,bonus:false,isNew:false};
+  const g=game,w=WORDS[g.row][g.n-1],res={word:w,ok:ok,bonus:false,isNew:false,spell:g.spellOk,sentence:''};
   if(ok){
     const idx=g.row*6+g.n-1;
     if(!album[idx]){album[idx]=true;res.isNew=true;saveAlbum()}
@@ -699,7 +893,7 @@ function mark(ok){
 }
 function nextRow(){
   if(game.row===3){finishSolo();return}
-  game.row++;game.step='roll';game.n=0;game.rolling=false;
+  game.row++;game.step='roll';game.n=0;game.rolling=false;resetRowState();
   setDie($('#pDie'),0);updatePlay();
 }
 function finishSolo(){
@@ -709,10 +903,18 @@ function finishSolo(){
   let h='<h2 id="f-title" tabindex="-1">'+title+'</h2>';
   h+='<p class="big-n" style="margin:10px 0 2px">'+right.length+' <span style="font-size:.4em">of 4</span></p><p style="font-weight:800;margin-bottom:10px">words read right'+(bonus?' · '+bonus+' challenge star'+(bonus>1?'s':''):'')+'</p>';
   h+='<h3>Words I Read Correctly</h3><div class="chips">';
-  h+=right.length?right.map(r=>'<button class="chip" data-say="'+r.word+'" aria-label="'+r.word+'. Tap to hear it.">★ '+r.word+'</button>').join(''):'<span class="chip">None this time. Every trail makes it easier.</span>';
+  h+=right.length?right.map(r=>'<button class="chip" data-say="'+r.word+'" aria-label="'+r.word+'. Tap to hear it.">★ '+r.word+(r.spell?' ✎':'')+'</button>').join(''):'<span class="chip">None this time. Every trail makes it easier.</span>';
   h+='</div>';
+  const typedRes=res.filter(r=>r.spell===true||r.spell===false);
+  if(typedRes.length)h+='<p style="margin:0 0 12px;font-weight:800">✎ Spelled right: '+typedRes.filter(r=>r.spell).length+' of '+typedRes.length+' typed</p>';
   if(again.length){
     h+='<h3>Try these again</h3><div class="chips">'+again.map(r=>'<button class="chip" data-say="'+r.word+'" aria-label="'+r.word+'. Tap to hear it.">○ '+r.word+'</button>').join('')+'</div>';
+  }
+  const sents=res.map((r,i)=>({r:r,i:i})).filter(x=>x.r.sentence);
+  if(sents.length){
+    h+='<h3>My sentences</h3>'+sents.map(x=>'<div class="sentrow"><p class="sentbox"><b>'+x.r.word+':</b> '+esc(x.r.sentence)+'</p>'+
+      (TTS?'<button class="chip" data-saysent="'+x.i+'">'+ICON_SPK+' Hear it</button>':'')+'</div>').join('')+
+      '<p class="tiny" style="margin:0 0 12px">Sentences are not saved. They go away when you leave.</p>';
   }
   if(all)h+='<p style="font-weight:900;margin:0 0 12px"><span class="newtag">NEW</span>Your album is complete. All 24 words!</p>';
   else h+='<p style="margin:0 0 12px">Album: '+album.filter(Boolean).length+' of 24 words found.</p>';
@@ -855,30 +1057,35 @@ function go(name){
   else if(name==='partner')startPartner();
 }
 function leave(){
-  askLeave(()=>{game.id++;P.id++;go('title')});
+  openModal({title:'Leave this game?',text:'Your trail so far will not be saved. Words already in your album stay there.',
+    a:'Keep playing',b:'Leave',cb:()=>{game.id++;P.id++;go('title')}});
 }
 
 document.addEventListener('click',e=>{
   const t=e.target;
   let el;
-  if((el=t.closest('[data-m]'))){const m=el.dataset.m,cb=modalCb;closeModal();if(m==='leave'&&cb)cb();return}
+  if((el=t.closest('[data-m]'))){const m=el.dataset.m,cb=modalCb;closeModal();if(m==='yes'&&cb)cb();return}
   if(t.closest('#soundBtn')){soundOn=!soundOn;store.set('roll-and-read-sound',soundOn?'on':'off');paintSound();if(soundOn)sfx.pop();return}
   actx(); // wake audio inside a tap
   if((el=t.closest('[data-pick]'))){rollOwn(+el.dataset.pick);return}
   if((el=t.closest('[data-ppick]'))){const a=el.dataset.ppick.split('-');partnerRoll(+a[0],+a[1]);return}
   if((el=t.closest('[data-pdie]'))){partnerRoll(+el.dataset.pdie);return}
   if((el=t.closest('[data-judge]'))){judge(+el.dataset.judge);return}
+  if((el=t.closest('[data-saysent]'))){const r=game.res[+el.dataset.saysent];if(r&&r.sentence)speak(r.sentence);return}
   if((el=t.closest('[data-say]'))){speak(el.dataset.say);return}
   if((el=t.closest('[data-go]'))){sfx.pop();go(el.dataset.go);return}
   if((el=t.closest('[data-act]'))){
     const a=el.dataset.act;
     if(a==='roll')rollWithTumble();
     else if(a==='cover'){game.step='cover';updatePlay()}
-    else if(a==='uncover'){game.step='check';updatePlay()}
+    else if(a==='uncover')doUncover();
+    else if(a==='mic')micClick(el.dataset.kind);
+    else if(a==='savesent')saveSentence();
+    else if(a==='skipsent'){game.sentMode=false;updatePlay()}
     else if(a==='right')mark(true);
     else if(a==='notyet')mark(false);
     else if(a==='hear'){speak(WORDS[game.row][game.n-1])}
-    else if(a==='bonus'){const r=game.res[game.row];if(r&&!r.bonus){r.bonus=true;sfx.bonus();vib(30);const b=el.getBoundingClientRect();burst(b.left+b.width/2,b.top,28);updatePlay()}}
+    else if(a==='bonus'){const r=game.res[game.row];if(r&&r.ok&&!r.bonus)startSentence()}
     else if(a==='next')nextRow();
     else if(a==='pnext')partnerNext();
     else if(a==='leave')leave();
@@ -888,9 +1095,20 @@ document.addEventListener('click',e=>{
     }
   }
 });
-// keyboard: number keys pick a die number, Escape closes the dialog
+// typing: remember what was typed, and switch the button to "Check my spelling" once there is text
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='spellIn'){game.typed=t.value;syncUncoverLabel()}
+  else if(t.id==='sentIn'){game.sentDraft=t.value}
+});
+// keyboard: Enter submits a typing box, number keys pick a die number, Escape closes the dialog
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!$('#modal').hidden){closeModal();return}
+  const t=e.target,tag=t&&t.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(t.id==='spellIn')doUncover();else if(t.id==='sentIn')saveSentence()}
+    return;
+  }
   if(current==='s-play'&&/^[1-6]$/.test(e.key)&&!e.metaKey&&!e.ctrlKey)rollOwn(+e.key);
 });
 
