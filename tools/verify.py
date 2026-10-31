@@ -17,10 +17,12 @@ def text(f,pages=None):
     a=['pdftotext']+(['-f',str(pages),'-l',str(pages)] if pages else [])+[f,'-']
     return ' '.join(subprocess.run(a,capture_output=True,text=True).stdout.split())
 for f in ["dist/01_Roll_and_Read_Clean_Classroom.pdf","dist/02_Roll_and_Read_Playful_Adventure.pdf"]:
-    if os.path.exists(f):
+    check(f+": file exists",os.path.isfile(f))
+    if os.path.isfile(f):
         t=text(f,1); check(f+": directions verbatim, 24 words on page 1",all(' '.join(d.split()) in t for d in DIRS) and all(w in t for ws in EXPECTED.values() for w in ws))
 f="dist/03_Roll_and_Read_Phone_Deck.pdf"
-if os.path.exists(f):
+check(f+": file exists",os.path.isfile(f))
+if os.path.isfile(f):
     t=text(f); check(f+": all words present",all(w in t for ws in EXPECTED.values() for w in ws))
     check(f+": directions verbatim",all(' '.join(d.split()) in text(f,2) for d in DIRS))
 h=open('game/index.html',encoding='utf-8').read()
