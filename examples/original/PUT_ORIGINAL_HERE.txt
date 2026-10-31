@@ -1,0 +1,2 @@
+Place the original plain Word document (or plain PDF) in this folder.
+Delete this file once it is added.
