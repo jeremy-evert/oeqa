@@ -27,7 +27,17 @@ That last step is the whole game.
 
 **4. Ask it to be honest about itself.** Try: *"Which parts of your answer are certain, which are guesses, and how could I check each one?"*
 
-**5. Keep going.** The first answer is a draft. Say what is wrong and ask again. "Make the headings larger." "Put it back the way it was." Nothing is permanent.
+**5. Keep going.** The first answer is a draft. Say what is wrong and ask again. "Make the headings larger." "Put it back the way it was." Chat answers are easy to redo. Files are different: if an agent has access to your Drive, have it work on a copy, and ask it to check with you before it changes, overwrites, shares, or deletes anything of yours.
+
+## Three ways to work with AI
+
+You can start at the first and move up whenever you feel ready.
+
+1. **Ask.** "Explain this to me." "Give me five ideas." You read the answer.
+2. **Create.** "Use my document to make a better-looking version." You get a draft and review it.
+3. **Delegate.** "Make the document, check it against the original, save it to my Drive, and tell me what to double-check." The agent does the steps. You still do the final check.
+
+The document makeover in this repository is level 3, and it works because the instructions say exactly what must not change.
 
 ## Prompts worth copying
 
