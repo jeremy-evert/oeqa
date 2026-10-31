@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Community Anchors distributes reviewed example PDFs.
+!dist/
+!dist/*.pdf
