@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html{color-scheme:light}body{margin:0}</style></head><body>
+<title>Roll and Read Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* Layout concept: one phone-sized "trail" screen at a time. Big die, one big button, the same 24 words as the teacher's sheet.
+   Single committed look (sunny trail map), so colors are set explicitly. */
+:root{
+  --ink:#0B3340; --teal:#0E5A66; --sky:#CFEFF2; --paper:#FFFDF6;
+  --sun:#FFC94A; --flame:#B94E0A; --good:#17724A; --oops:#A8321F;
+  --display:'Baloo 2','Trebuchet MS',system-ui,sans-serif;
+  --body:'Atkinson Hyperlegible','Trebuchet MS',system-ui,sans-serif;
+  --shadow:0 5px 0 var(--ink);
+}
+html,body{height:100%}
+body{background:var(--sky);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.4;
+  padding-block:0;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color:transparent;overflow-x:hidden}
+*{box-sizing:border-box}
+#app{max-width:460px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:14px;padding-block:14px 28px;position:relative}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.05;margin:0;text-wrap:balance}
+h2{font-size:28px} h3{font-size:21px}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:4px solid var(--flame);outline-offset:3px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{font-family:var(--display);font-weight:800;font-size:22px;color:var(--teal)}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:3px solid var(--ink);border-radius:99px;padding:4px 12px;font-family:var(--display);font-weight:800;font-size:18px;min-height:44px}
+.pill svg{width:22px;height:22px;flex:none}
+.menu-btn{background:var(--paper)}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;padding:10px 18px;border:3px solid var(--ink);border-radius:20px;
+  font-family:var(--display);font-weight:800;font-size:23px;line-height:1.1;background:var(--paper);box-shadow:var(--shadow);text-align:center}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.btn.go{background:var(--flame);color:#fff}
+.btn.sun{background:var(--sun)}
+.btn.small{min-height:48px;font-size:18px;border-radius:16px}
+.btn[disabled]{opacity:.45;box-shadow:none;cursor:not-allowed}
+.btn svg{width:26px;height:26px;flex:none}
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.tag{align-self:flex-start;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border:2px dashed var(--ink);border-radius:8px;padding:2px 8px;background:#fff}
+.muted{font-size:15px;color:#2d5560}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 0;min-width:0}
+
+/* home */
+.hero{text-align:center;display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.hero h1{font-size:clamp(46px,15vw,66px);color:var(--ink)}
+.hero .sub{font-family:var(--display);font-weight:600;font-size:21px;color:var(--teal)}
+.hills{margin-top:auto;width:calc(100% + 32px);margin-left:-16px;display:block}
+.dicepair{display:flex;justify-content:center;gap:14px;margin:6px 0}
+
+/* dice */
+.die{width:var(--s,128px);height:var(--s,128px);background:#fff;border:4px solid var(--ink);border-radius:calc(var(--s,128px)*.2);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:calc(var(--s,128px)*.12);box-shadow:var(--shadow);flex:none}
+.die i{width:62%;height:62%;border-radius:50%;background:var(--ink);align-self:center;justify-self:center}
+.die i.hide{background:transparent}
+.die.tumble{animation:tumble .5s linear infinite}
+@keyframes tumble{0%{transform:rotate(-10deg) translateY(0)}50%{transform:rotate(12deg) translateY(-12px)}100%{transform:rotate(-10deg) translateY(0)}}
+.rollwrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.picks{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;width:100%}
+.picks .btn{min-height:52px;padding:4px;font-size:22px;border-radius:14px}
+
+/* trail */
+.trail{display:flex;flex-direction:column;gap:0;padding-left:6px}
+.stop{display:flex;align-items:center;gap:14px;position:relative;padding:6px 0}
+.stop:not(:last-child)::after{content:"";position:absolute;left:23px;top:54px;height:18px;border-left:4px dashed var(--teal)}
+.badge{width:50px;height:50px;border-radius:50%;border:3px solid var(--ink);background:var(--paper);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:24px;flex:none}
+.stop.now .badge{background:var(--sun);transform:scale(1.14);animation:pulse 1.4s ease-in-out infinite}
+.stop.done .badge{background:var(--good);color:#fff}
+.stop .lab{font-family:var(--display);font-weight:800;font-size:19px}
+.stop .lab small{display:block;font-family:var(--body);font-weight:400;font-size:15px}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(255,201,74,.55)}}
+
+/* word screen */
+.steps{display:flex;gap:6px}
+.steps span{flex:1;text-align:center;font-size:13px;font-weight:700;padding:5px 0;border-radius:10px;border:2px solid var(--ink);background:var(--paper);text-transform:uppercase;letter-spacing:.02em}
+.steps span.on{background:var(--sun);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:3px}
+.steps span.past{background:#bfe3cf}
+.where{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:800;font-size:19px}
+.bigword{font-family:var(--display);font-weight:800;font-size:clamp(58px,21vw,92px);text-align:center;line-height:1.05;letter-spacing:.01em;word-break:break-word}
+.bigword mark{background:var(--sun);color:var(--ink);border-radius:8px;padding:0 3px;box-shadow:inset 0 -5px 0 rgba(185,78,10,.55)}
+.bigword.blank{letter-spacing:.18em;color:var(--teal)}
+.tricky{align-self:center;background:var(--ink);color:#fff;border-radius:99px;padding:4px 14px;font-family:var(--display);font-weight:800;font-size:17px}
+.slots{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.slot,.tile{width:54px;height:62px;border-radius:14px;border:3px solid var(--ink);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:34px;padding:0}
+.slot{background:#fff;border-style:dashed}
+.slot.full{border-style:solid;background:var(--sun)}
+.tile{background:var(--paper);box-shadow:0 4px 0 var(--ink)}
+.tile:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.tile.used{visibility:hidden}
+.compare{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.compare div{width:50px;text-align:center}
+.compare b{display:grid;place-items:center;height:58px;border-radius:12px;border:3px solid var(--ink);font-family:var(--display);font-weight:800;font-size:32px;background:#fff}
+.compare b.ok{background:#bfe3cf}
+.compare b.no{background:#ffd6cc;border-style:dashed}
+.compare small{display:block;font-size:14px;font-weight:700}
+.tally{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;min-height:56px}
+.tally svg{height:56px;width:auto}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:3px solid var(--ink);border-radius:14px;background:var(--paper);padding:6px 12px;font-family:var(--display);font-weight:800;font-size:20px;min-height:46px}
+.chip.sel{background:var(--sun);transform:translateY(-3px);box-shadow:0 4px 0 var(--ink)}
+.chip.mini{font-size:17px;min-height:40px;padding:3px 10px}
+.buckets{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bucket{border:3px solid var(--ink);border-radius:16px;background:var(--paper);padding:8px;min-height:92px;text-align:left;display:flex;flex-direction:column;gap:6px;width:100%}
+.bucket b{font-family:var(--display);font-weight:800;font-size:24px}
+.bucket.wide{grid-column:1/-1}
+.bucket.armed{background:#fff7d6;border-style:dashed}
+
+/* table (original sheet) */
+.sheetwrap{overflow-x:auto}
+table.sheet{border-collapse:collapse;width:100%;min-width:430px;background:var(--paper)}
+.sheet th,.sheet td{border:2px solid var(--ink);padding:6px 4px;text-align:center;font-family:var(--display);font-weight:800;font-size:17px}
+.sheet th{background:var(--sun)}
+.sheet td button{background:none;border:0;font:inherit;padding:8px 2px;width:100%;min-height:44px}
+ol.dirs,ul.ways{margin:0;padding-left:24px;display:flex;flex-direction:column;gap:8px}
+ul.ways{list-style:none;padding-left:0}
+
+/* sheets / overlays */
+.sheetpanel{position:fixed;inset:0;background:rgba(11,51,64,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center;padding-top:env(safe-area-inset-top,0px)}
+.panel{background:var(--sky);width:100%;max-width:460px;border:3px solid var(--ink);border-bottom:0;border-radius:26px 26px 0 0;padding:18px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));display:flex;flex-direction:column;gap:10px;max-height:88%;overflow:auto}
+canvas.draw{width:100%;height:210px;background:#fff;border:3px solid var(--ink);border-radius:18px;touch-action:none;display:block}
+.swatches{display:flex;gap:8px;align-items:center}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid var(--ink);padding:0}
+.sw.on{box-shadow:0 0 0 4px var(--sun), 0 0 0 7px var(--ink)}
+textarea{width:100%;min-height:96px;border:3px solid var(--ink);border-radius:16px;padding:12px;font:inherit;font-size:20px;background:#fff;color:var(--ink);resize:vertical}
+.feed{font-weight:700;min-height:26px}
+.feed.good{color:var(--good)}
+.confetti{position:fixed;width:10px;height:14px;z-index:40;pointer-events:none;border-radius:2px;animation:fall 1.5s ease-out forwards}
+@keyframes fall{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r));opacity:0}}
+.sr{position:absolute;left:-9999px}
+@media (prefers-reduced-motion:reduce){.stop.now .badge,.die.tumble{animation:none}.confetti{display:none}}
+</style>
+
+<div id="app"></div>
+<div id="live" class="sr" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- SOURCE DATA (from the teacher's one-page sheet; verified word for word) ---------- */
+var ROWS=['A','B','C','D'];
+var WORDS={
+  A:['Her','Church','First','Birthday','Third','Serve'],
+  B:['Hurt','Turning','Thirst','Verse','Skirt','Burned'],
+  C:['Squirm','Nurse','Songbird','Mercy','Large','Before'],
+  D:['Mercy','Very','Birthday','Every','Thirst','Nurse']
+};
+var DIRECTIONS=[
+ 'Roll a die.',
+ 'Find the column that matches your number.',
+ 'Read the word in that column in Row A. Then roll again for Row B, and keep going to Row D.',
+ 'Cover the word, then spell it without looking (out loud or on paper). Uncover it to check.',
+ 'Put a tally mark or a check next to each word you read correctly.',
+ 'Challenge: use each word you read in a sentence.'
+];
+var WAYS=[
+ ['Partner race:','Both players roll, read their word, and the first correct reader earns a point.'],
+ ['Write it:','Roll, read the word, then write it on a whiteboard or in a notebook.'],
+ ['Sort it:','Collect the words and sort them by spelling pattern (er, ir, ur, ear, ar, or) and by tricky words (Very, Every, Before).']
+];
+var TRICKY={Very:1,Every:1,Before:1};
+var PATTERNS=['er','ir','ur','ear','ar','or'];
+var UNIQUE=(function(){var s={},o=[];ROWS.forEach(function(r){WORDS[r].forEach(function(w){if(!s[w]){s[w]=1;o.push(w)}})});return o})();
+
+/* ---------- small helpers ---------- */
+var $app=document.getElementById('app'), $live=document.getElementById('live');
+function store(k,v){try{if(v===undefined){var r=localStorage.getItem(k);return r?JSON.parse(r):null}localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+var saved=store('rr-quest-v1')||{};
+var stars=saved.stars|0, muted=!!saved.muted;
+function persist(){store('rr-quest-v1',{stars:stars,muted:muted})}
+function say(t){try{if(!hasTTS)return;speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.rate=.8;u.lang='en-US';speechSynthesis.speak(u)}catch(e){}}
+var hasTTS=(typeof window.speechSynthesis!=='undefined')&&(typeof window.SpeechSynthesisUtterance!=='undefined');
+var actx=null;
+function chime(good){try{if(muted)return;actx=actx||new (window.AudioContext||window.webkitAudioContext)();var t=actx.currentTime;(good?[523,659,784]:[330,262]).forEach(function(f,i){var o=actx.createOscillator(),g=actx.createGain();o.type='triangle';o.frequency.value=f;g.gain.setValueAtTime(.0001,t+i*.11);g.gain.exponentialRampToValueAtTime(.18,t+i*.11+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.11+.22);o.connect(g);g.connect(actx.destination);o.start(t+i*.11);o.stop(t+i*.11+.25)})}catch(e){}}
+function announce(t){$live.textContent='';setTimeout(function(){$live.textContent=t},30)}
+function rnd(n){try{var a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]%n}catch(e){return Math.floor(Math.random()*n)}}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=rnd(i+1),t=a[i];a[i]=a[j];a[j]=t}return a}
+function reduced(){return window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches}
+function burst(el){if(reduced())return;var r=el?el.getBoundingClientRect():{left:innerWidth/2,top:innerHeight/2,width:0,height:0};var cx=r.left+r.width/2,cy=r.top+r.height/2;var cols=['#FFC94A','#B94E0A','#0E5A66','#17724A','#ffffff'];
+  for(var i=0;i<34;i++){var s=document.createElement('span');s.className='confetti';s.style.left=cx+'px';s.style.top=cy+'px';s.style.background=cols[i%cols.length];s.style.border='1px solid #0B3340';
+    s.style.setProperty('--dx',(Math.random()*320-160)+'px');s.style.setProperty('--dy',(Math.random()*-220-40)+'px');s.style.setProperty('--r',(Math.random()*720-360)+'deg');document.body.appendChild(s);(function(n){setTimeout(function(){n.remove()},1600)})(s)}}
+
+/* ---------- icons ---------- */
+var I={
+ star:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" fill="#FFC94A" stroke="#0B3340" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+ speaker:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+ menu:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+ check:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ eye:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>',
+ cover:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3" fill="currentColor"/></svg>'
+};
+var PIP={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+function dieHTML(n,size,cls){var h='';for(var c=1;c<=9;c++)h+='<i class="'+(PIP[n].indexOf(c)>-1?'':'hide')+'"></i>';return '<div class="die '+(cls||'')+'" style="--s:'+size+'px" role="img" aria-label="Die showing '+n+'">'+h+'</div>'}
+function tallySVG(n){if(!n)return '';var out='',g=Math.floor(n/5),r=n%5,i;
+  function grp(k,slash){var s='<svg viewBox="0 0 64 56" aria-hidden="true">';for(i=0;i<k;i++)s+='<line x1="'+(8+i*14)+'" y1="6" x2="'+(8+i*14)+'" y2="50" stroke="#0B3340" stroke-width="6" stroke-linecap="round"/>';if(slash)s+='<line x1="2" y1="40" x2="62" y2="14" stroke="#B94E0A" stroke-width="6" stroke-linecap="round"/>';return s+'</svg>'}
+  for(i=0;i<g;i++)out+=grp(4,true);if(r)out+=grp(r,false);return out}
+function patternHTML(w){var low=w.toLowerCase(),out='',i=0;while(i<low.length){var hit=null;for(var k=0;k<PATTERNS.length;k++){var p=PATTERNS[k];if(low.substr(i,p.length)===p&&(!hit||p.length>hit.length))hit=p}
+  if(hit){out+='<mark>'+w.substr(i,hit.length)+'</mark>';i+=hit.length}else{out+=w.charAt(i);i++}}return out}
+
+/* ---------- state ---------- */
+var S={screen:'home',row:0,col:null,phase:'roll',rolling:false,rollFace:6,tiles:[],slots:[],via:null,fixed:false,run:[],tallies:{},menu:false,
+  det:{sel:null,placed:{}},sent:{a:null,b:null,color:'#0B3340',spoke:false,starred:false,pickFor:'a'}};
+function curWord(){return WORDS[ROWS[S.row]][S.col-1]}
+
+/* ---------- screens ---------- */
+function topbar(){return '<div class="top"><div class="brand">Roll &amp; Read</div><div class="row" style="flex:none;gap:8px"><span class="pill" aria-label="'+stars+' stars">'+I.star+stars+'</span><button class="pill menu-btn" data-act="menu" aria-label="Open menu">'+I.menu+'Menu</button></div></div>'}
+function hillsSVG(){return '<svg class="hills" viewBox="0 0 400 150" preserveAspectRatio="none" aria-hidden="true"><circle cx="318" cy="38" r="26" fill="#FFC94A" stroke="#B94E0A" stroke-width="4"/><path d="M0 150V80l70-40 70 34 80-52 90 62 90-40v106z" fill="#8CC7CD"/><path d="M0 150V108l90-30 110 28 90-30 110 34v40z" fill="#0E5A66"/></svg>'}
+
+function home(){return '<div class="hero"><div class="tag" style="align-self:center">Reading game for 3rd grade</div><h1>Roll &amp; Read</h1><div class="sub">R-controlled vowels and tricky words</div>'+
+  '<div class="dicepair">'+dieHTML(4,84)+dieHTML(2,84)+'</div></div>'+
+  '<button class="btn go" data-act="start">Start the trail</button>'+
+  '<div class="row"><button class="btn small" data-act="goto" data-s="how">How to play</button><button class="btn small" data-act="goto" data-s="sheet">The word sheet</button></div>'+
+  '<p class="muted" style="text-align:center">Same words and directions as the teacher’s sheet. Extras are marked <b>NEW</b>.</p>'+hillsSVG()}
+
+function trail(){
+  var stops=ROWS.map(function(r,i){var cls=i<S.row?'done':(i===S.row?'now':'');
+    var word=S.run[i]?S.run[i]:'';
+    return '<div class="stop '+cls+'"><div class="badge">'+(i<S.row?I.check.replace('<svg','<svg width="26" height="26"'):r)+'</div><div class="lab">Row '+r+(i<S.row?'<small>You read: '+word+'</small>':(i===S.row?'<small>Roll to find your word</small>':''))+'</div></div>'}).join('');
+  var rollArea='<div class="rollwrap">'+dieHTML(S.rollFace,132,S.rolling?'tumble':'')+
+    '<button class="btn go" data-act="roll"'+(S.rolling?' disabled':'')+'>'+(S.rolling?'Rolling...':'Roll the die!')+'</button></div>'+
+    '<div class="card"><h3>Using a real die?</h3><div class="picks">'+[1,2,3,4,5,6].map(function(n){return '<button class="btn" data-act="pick" data-n="'+n+'" aria-label="I rolled '+n+'">'+n+'</button>'}).join('')+'</div><p class="muted">Tap the number you rolled.</p></div>';
+  return topbar()+'<h2>Row '+ROWS[S.row]+'</h2><div class="card"><div class="trail">'+stops+'</div></div>'+rollArea}
+
+function stepper(){var names=['Read','Cover','Spell','Check','Tally'],idx={read:0,cover:1,spell:2,check:3,mark:4,earned:4}[S.phase];
+  return '<div class="steps" aria-label="Steps">'+names.map(function(n,i){return '<span class="'+(i===idx?'on':(i<idx?'past':''))+'">'+n+'</span>'}).join('')+'</div>'}
+
+function wordScreen(){
+  var w=curWord(),h=topbar()+stepper();
+  h+='<div class="where">'+dieHTML(S.col,54)+'<span>Column '+S.col+', Row '+ROWS[S.row]+'</span></div>';
+  if(S.phase==='read'){
+    h+='<div class="card"><div class="bigword" aria-label="'+w+'">'+patternHTML(w)+'</div>'+(TRICKY[w]?'<div class="tricky">Tricky word!</div>':'')+
+      (hasTTS?'<button class="btn sun" data-act="hear">'+I.speaker+'Hear it</button>':'')+
+      '<span class="tag">NEW · highlight shows letter pairs automatically</span></div>'+
+      '<button class="btn go" data-act="cover">'+I.cover+'I read it. Cover it!</button>'+
+      '<p class="muted" style="text-align:center">Say the word out loud first.</p>';
+  }else if(S.phase==='spell'){
+    var blanks=w.split('').map(function(){return '_'}).join(' ');
+    h+='<div class="card"><div class="bigword blank" aria-label="Hidden word with '+w.length+' letters">'+blanks+'</div>'+
+      '<p style="text-align:center;font-weight:700">Build the word. Tap the letters in order.</p>'+
+      '<div class="slots">'+S.slots.map(function(s,i){return '<button class="slot '+(s!==null?'full':'')+'" data-act="slot" data-i="'+i+'" aria-label="Spot '+(i+1)+(s!==null?': '+S.tiles[s]:': empty')+'">'+(s!==null?S.tiles[s]:'')+'</button>'}).join('')+'</div>'+
+      '<div class="slots">'+S.tiles.map(function(t,i){return '<button class="tile '+(S.slots.indexOf(i)>-1?'used':'')+'" data-act="tile" data-i="'+i+'" aria-label="Letter '+t+'">'+t+'</button>'}).join('')+'</div>'+
+      '<span class="tag">NEW · letter tiles</span></div>'+
+      '<button class="btn go" data-act="uncover"'+(S.slots.indexOf(null)>-1?' disabled':'')+'>'+I.eye+'Uncover to check</button>'+
+      '<div class="row"><button class="btn small" data-act="reshuffle">Mix letters</button><button class="btn small" data-act="aloud">Spell out loud or on paper</button></div>';
+  }else if(S.phase==='check'){
+    var attempt=S.via==='tiles'?S.slots.map(function(s){return S.tiles[s]}).join(''):null;
+    h+='<div class="card"><div class="bigword" aria-label="'+w+'">'+w+'</div>';
+    if(attempt!==null){var low=w.toLowerCase(),allok=attempt===low;
+      h+='<div class="compare">'+low.split('').map(function(ch,i){var ok=attempt.charAt(i)===ch;return '<div><b class="'+(ok?'ok':'no')+'">'+(attempt.charAt(i)||'?')+'</b><small>'+(ok?'match':'check')+'</small></div>'}).join('')+'</div>'+
+        '<p style="text-align:center;font-weight:700">'+(allok?'Every letter matches!':'Compare the letters. Which one is different?')+'</p>';
+    }else{h+='<p style="text-align:center;font-weight:700">Look at each letter. Did your spelling match?</p>'}
+    h+=(hasTTS?'<button class="btn sun small" data-act="hear">'+I.speaker+'Hear it</button>':'')+'</div>'+
+      '<div class="row"><button class="btn go" data-act="right">'+I.check+'I spelled it right</button><button class="btn" data-act="fixed">I fixed it</button></div>';
+  }else if(S.phase==='mark'){
+    h+='<div class="card"><h2 style="text-align:center">Did you read <u>'+w+'</u> correctly?</h2><p class="muted" style="text-align:center">A tally mark goes next to each word you read correctly.</p></div>'+
+      '<button class="btn go" data-act="tally">'+I.check+'Yes! Add my tally mark</button><button class="btn" data-act="later">Not yet. I will try it again later</button>';
+  }else if(S.phase==='earned'){
+    var key=ROWS[S.row]+S.col,n=S.tallies[w]||0;
+    h+='<div class="card" style="align-items:center;text-align:center"><h2>Tally mark!</h2><div class="tally" aria-label="'+n+' tally marks for '+w+'">'+tallySVG(n)+'</div><p>You read <b>'+w+'</b>. You earned a star.</p></div>'+
+      '<button class="btn go" data-act="next">'+(S.row<3?'Next stop: Row '+ROWS[S.row+1]:'See my words')+'</button>';
+  }
+  return h}
+
+function done(){
+  var words=[];S.run.forEach(function(w){if(w&&words.indexOf(w)<0)words.push(w)});
+  return topbar()+'<div class="hero"><h1>Trail complete!</h1><p class="sub">You rolled through Rows A to D.</p></div>'+
+    '<div class="card"><h3>Words I Read Correctly</h3>'+(words.length?'<div class="chips">'+words.map(function(w){return '<button class="chip" data-act="say" data-w="'+w+'">'+w+'</button>'}).join('')+'</div>':'<p>Roll again to collect words.</p>')+
+    '<p class="muted">Tap a word to hear it.</p></div>'+
+    '<div class="card"><h3>Challenge: use your words in a sentence</h3><span class="tag">NEW · Silly Sentence Lab</span><button class="btn sun" data-act="goto" data-s="sentence">Silly Sentence Lab</button></div>'+
+    '<div class="row"><button class="btn small" data-act="goto" data-s="detective">Word Detective</button><button class="btn go small" data-act="start">Play again</button></div>'}
+
+function sheet(){
+  return topbar()+'<h2>The word sheet</h2><p class="muted">The teacher’s 4 by 6 grid. Tap a word to hear it.</p>'+
+   '<div class="sheetwrap"><table class="sheet"><thead><tr><th scope="col">Roll</th>'+[1,2,3,4,5,6].map(function(n){return '<th scope="col">'+n+'</th>'}).join('')+'</tr></thead><tbody>'+
+   ROWS.map(function(r){return '<tr><th scope="row">Row '+r+'</th>'+WORDS[r].map(function(w){return '<td><button data-act="say" data-w="'+w+'">'+w+'</button></td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>'+
+   '<button class="btn go" data-act="start">Play the trail</button>'}
+
+function how(){
+  return topbar()+'<h2>How to play</h2><div class="card"><h3>Directions</h3><ol class="dirs">'+DIRECTIONS.map(function(d){return '<li>'+d+'</li>'}).join('')+'</ol></div>'+
+   '<div class="card"><h3>Ways to Play</h3><ul class="ways">'+WAYS.map(function(w){return '<li>• <b>'+w[0]+'</b> '+w[1]+'</li>'}).join('')+'</ul></div>'+
+   '<p class="muted">On this phone version, the die is on the screen. You can also use a real die.</p>'+
+   '<button class="btn go" data-act="start">Start the trail</button>'}
+
+function detective(){
+  var d=S.det,words=(S.run.length?UNIQUE.filter(function(w){return S.run.indexOf(w)>-1}):UNIQUE);
+  var un=words.filter(function(w){return !d.placed[w]});
+  function bucketWords(b){return words.filter(function(w){return d.placed[w]===b})}
+  var b=PATTERNS.concat(['discuss']).map(function(p){var inb=bucketWords(p);
+    return '<button class="bucket '+(p==='discuss'?'wide ':'')+(d.sel?'armed':'')+'" data-act="drop" data-b="'+p+'" aria-label="'+(p==='discuss'?'Let’s Discuss':p)+' bucket"><b>'+(p==='discuss'?'Let’s Discuss':p)+'</b><span class="chips">'+inb.map(function(w){return '<span class="chip mini" data-act="back" data-w="'+w+'" role="button" tabindex="0">'+w+'</span>'}).join('')+'</span></button>'}).join('');
+  return topbar()+'<h2>Word Detective</h2><span class="tag">NEW · not teacher-reviewed · no answer key</span>'+
+   '<p>Tap a word, then tap where you think it belongs. Some words fit more than one spot, or none. Put those in “Let’s Discuss” and talk it over with your teacher or grown-up.</p>'+
+   '<div class="card"><div class="chips">'+(un.length?un.map(function(w){return '<button class="chip '+(d.sel===w?'sel':'')+'" data-act="selw" data-w="'+w+'">'+w+'</button>'}).join(''):'<b>All sorted! Show a grown-up.</b>')+'</div></div>'+
+   '<div class="buckets">'+b+'</div><button class="btn small" data-act="resetdet">Start over</button>'}
+
+function sentence(){
+  var s=S.sent,pool=S.run.length?UNIQUE.filter(function(w){return S.run.indexOf(w)>-1}):UNIQUE;
+  function slot(k){return '<button class="chip '+(s.pickFor===k?'sel':'')+'" data-act="pickfor" data-k="'+k+'" style="flex:1;min-width:120px">'+(s[k]||'Pick a word')+'</button>'}
+  return topbar()+'<h2>Silly Sentence Lab</h2><span class="tag">NEW · not teacher-reviewed</span>'+
+   '<div class="card"><h3>1. Pick two words</h3><div class="row">'+slot('a')+slot('b')+'</div><div class="chips">'+pool.map(function(w){return '<button class="chip mini" data-act="usew" data-w="'+w+'">'+w+'</button>'}).join('')+'</div></div>'+
+   '<div class="card"><h3>2. Write one funny sentence</h3><textarea id="sentence" aria-label="My sentence" placeholder="Type your silly sentence here" autocomplete="off" autocapitalize="sentences"></textarea><div class="feed" id="sfeed" aria-live="polite"></div>'+
+   (hasTTS?'<button class="btn small sun" data-act="speaksent">'+I.speaker+'Hear my sentence</button>':'')+'</div>'+
+   '<div class="card"><h3>3. Draw it</h3><canvas class="draw" id="draw" aria-label="Drawing space"></canvas><div class="swatches">'+['#0B3340','#B94E0A','#17724A','#0E5A66','#7a3fb0'].map(function(c){return '<button class="sw '+(s.color===c?'on':'')+'" style="background:'+c+'" data-act="color" data-c="'+c+'" aria-label="Pen color"></button>'}).join('')+'<button class="btn small" data-act="clear" style="width:auto;flex:1">Clear</button></div></div>'+
+   '<button class="btn go" data-act="aloudsent" id="aloudbtn">'+I.check+'I read my sentence out loud</button><p class="muted" style="text-align:center">Your sentence and drawing stay on this phone. Nothing is sent or saved.</p>'}
+
+function grown(){
+  return topbar()+'<h2>For grown-ups</h2><div class="card"><h3>What the game is</h3><p>Your child rolls a die, finds the matching column, and reads a word. Then they cover the word, spell it, and uncover it to check. They add a tally mark for each word they read correctly.</p>'+
+   '<h3>A short session</h3><p>Ten to fifteen minutes can be plenty, if that suits your child. Stop sooner if they are tired or frustrated. A few words, read happily, is a good day.</p>'+
+   '<h3>How you can help</h3><p>Let your child try first and wait a few seconds before helping. Praise effort and strategies (“You sounded that out!”). If a word is stuck, say it together and move on. The teacher’s sheet calls Very, Every, and Before “tricky words,” so ask the teacher how they want those practiced.</p></div>'+
+   '<div class="card"><h3>Good to know</h3><ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px"><li>The 24 words and the directions come from the teacher’s one-page sheet.</li><li>Everything marked <b>NEW</b> (letter tiles, pattern highlights, Word Detective, Silly Sentence Lab) was added by Claude and has <b>not</b> been reviewed by an educator. The highlights find letter pairs automatically and do not claim a phonics rule.</li><li>Permission to share the original sheet is not confirmed.</li><li>No names or photos are used. Nothing typed or drawn leaves this phone; only the star count is remembered on this device.</li><li>This is a practice game, not a replacement for reading instruction.</li></ul></div>'+
+   '<div class="card"><h3>Feedback for the teacher</h3><p>Could you use this tomorrow, and what would you change?</p></div>'}
+
+/* ---------- menu ---------- */
+function menuHTML(){return '<div class="sheetpanel" data-act="closemenu"><div class="panel" role="dialog" aria-label="Menu" data-stop="1"><h3>Menu</h3>'+
+  [['play','Play the trail'],['how','How to play'],['sheet','The word sheet'],['detective','Word Detective'],['sentence','Silly Sentence Lab'],['grown','For grown-ups']].map(function(m){return '<button class="btn small" data-act="menugo" data-s="'+m[0]+'">'+m[1]+'</button>'}).join('')+
+  '<button class="btn small" data-act="mute">'+(muted?'Sound is off. Turn on':'Sound is on. Turn off')+'</button><button class="btn small" data-act="closemenu">Close</button></div></div>'}
+
+/* ---------- render ---------- */
+function render(){
+  var h='';
+  switch(S.screen){case 'home':h=home();break;case 'trail':h=trail();break;case 'word':h=wordScreen();break;case 'done':h=done();break;case 'sheet':h=sheet();break;case 'how':h=how();break;case 'detective':h=detective();break;case 'sentence':h=sentence();break;case 'grown':h=grown();break}
+  if(S.menu)h+=menuHTML();
+  $app.innerHTML=h;
+  if(S.screen==='sentence')initCanvas();
+}
+
+/* ---------- drawing ---------- */
+var DR={ctx:null,down:false,x:0,y:0};
+function initCanvas(){var c=document.getElementById('draw');if(!c)return;var r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.max(1,Math.round(r.width*dpr));c.height=Math.max(1,Math.round(r.height*dpr));
+  var x=c.getContext('2d');x.scale(dpr,dpr);x.lineCap='round';x.lineJoin='round';x.lineWidth=5;DR.ctx=x;
+  function pt(e){var b=c.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top]}
+  c.addEventListener('pointerdown',function(e){DR.down=true;var p=pt(e);DR.x=p[0];DR.y=p[1];x.strokeStyle=S.sent.color;x.beginPath();x.moveTo(p[0],p[1]);x.lineTo(p[0]+.1,p[1]+.1);x.stroke();try{c.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
+  c.addEventListener('pointermove',function(e){if(!DR.down)return;var p=pt(e);x.strokeStyle=S.sent.color;x.beginPath();x.moveTo(DR.x,DR.y);x.lineTo(p[0],p[1]);x.stroke();DR.x=p[0];DR.y=p[1];e.preventDefault()});
+  ['pointerup','pointercancel','pointerleave'].forEach(function(n){c.addEventListener(n,function(){DR.down=false})});
+  var ta=document.getElementById('sentence');if(ta)ta.addEventListener('input',checkSentence)}
+function checkSentence(){var ta=document.getElementById('sentence'),f=document.getElementById('sfeed');if(!ta||!f)return;var t=ta.value.toLowerCase(),a=S.sent.a,b=S.sent.b;
+  if(!a||!b){f.className='feed';f.textContent=ta.value?'Pick two words above to use.':'';return}
+  var ha=new RegExp('\\b'+a.toLowerCase()+'\\b').test(t),hb=new RegExp('\\b'+b.toLowerCase()+'\\b').test(t);
+  if(ha&&hb){f.className='feed good';f.textContent='Your sentence uses both words!'}else{f.className='feed';f.textContent='Still need: '+[ha?null:a,hb?null:b].filter(Boolean).join(' and ')}}
+
+/* ---------- actions ---------- */
+function setWord(n){S.col=n;S.phase='read';S.screen='word';S.slots=[];S.via=null;S.fixed=false;S.rolling=false;render();announce('You rolled '+n+'. Your word is '+curWord());window.scrollTo(0,0)}
+function startPhase(){var w=curWord().toLowerCase();S.tiles=shuffle(w.split(''));if(S.tiles.join('')===w&&w.length>2)S.tiles=shuffle(S.tiles);S.slots=w.split('').map(function(){return null})}
+function advance(){if(S.row<3){S.row++;S.phase='roll';S.screen='trail';S.rollFace=1+rnd(6)}else{S.screen='done';burst()}render();window.scrollTo(0,0)}
+function resetRun(){S.row=0;S.run=[];S.tallies={};S.phase='roll';S.screen='trail';S.rolling=false;S.rollFace=1+rnd(6)}
+
+var A={
+ start:function(){resetRun();render();window.scrollTo(0,0)},
+ roll:function(){if(S.rolling)return;S.rolling=true;render();var t=0,iv=setInterval(function(){S.rollFace=1+rnd(6);var d=$app.querySelector('.die');if(d){d.outerHTML=dieHTML(S.rollFace,132,'tumble')}t++;if(t>=(reduced()?1:9)){clearInterval(iv);var n=1+rnd(6);S.rollFace=n;S.rolling=false;chime(true);setWord(n)}},90)},
+ pick:function(el){setWord(+el.dataset.n)},
+ hear:function(){say(curWord())},
+ say:function(el){say(el.dataset.w)},
+ cover:function(){startPhase();S.phase='spell';render()},
+ tile:function(el){var i=+el.dataset.i;if(S.slots.indexOf(i)>-1)return;var k=S.slots.indexOf(null);if(k<0)return;S.slots[k]=i;S.via='tiles';render()},
+ slot:function(el){var k=+el.dataset.i;if(S.slots[k]===null)return;S.slots[k]=null;
+   /* compact: keep order by shifting filled slots left so there are no gaps */
+   var filled=S.slots.filter(function(s){return s!==null});S.slots=filled.concat(S.slots.filter(function(s){return s===null}));render()},
+ reshuffle:function(){S.tiles=shuffle(S.tiles);S.slots=S.slots.map(function(){return null});render()},
+ aloud:function(){S.via='aloud';S.phase='check';render()},
+ uncover:function(){if(S.slots.indexOf(null)>-1)return;S.via='tiles';S.phase='check';render()},
+ right:function(){S.phase='mark';chime(true);render()},
+ fixed:function(){S.fixed=true;S.phase='mark';render()},
+ tally:function(el){var w=curWord();S.tallies[w]=(S.tallies[w]||0)+1;S.run[S.row]=w;stars++;persist();S.phase='earned';render();var b=$app.querySelector('.tally');burst(b);chime(true)},
+ later:function(){S.run[S.row]=null;advance()},
+ next:function(){advance()},
+ menu:function(){S.menu=true;render()},
+ closemenu:function(){S.menu=false;render()},
+ menugo:function(el){S.menu=false;var s=el.dataset.s;if(s==='play'){if(S.screen==='word'||S.screen==='trail'){render()}else{A.start();return}}else{S.screen=s}render();window.scrollTo(0,0)},
+ goto:function(el){S.screen=el.dataset.s;render();window.scrollTo(0,0)},
+ mute:function(){muted=!muted;persist();S.menu=true;render();if(!muted)chime(true)},
+ selw:function(el){S.det.sel=S.det.sel===el.dataset.w?null:el.dataset.w;render()},
+ drop:function(el){var d=S.det;if(!d.sel)return;d.placed[d.sel]=el.dataset.b;d.sel=null;render()},
+ back:function(el){delete S.det.placed[el.dataset.w];render()},
+ resetdet:function(){S.det={sel:null,placed:{}};render()},
+ pickfor:function(el){S.sent.pickFor=el.dataset.k;render()},
+ usew:function(el){var s=S.sent,k=s.pickFor;s[k]=el.dataset.w;s.pickFor=(k==='a'?'b':'a');var ta=document.getElementById('sentence'),keep=ta?ta.value:'';render();var t2=document.getElementById('sentence');if(t2){t2.value=keep;checkSentence()}},
+ speaksent:function(){var ta=document.getElementById('sentence');if(ta&&ta.value.trim())say(ta.value)},
+ color:function(el){S.sent.color=el.dataset.c;document.querySelectorAll('.sw').forEach(function(b){b.classList.toggle('on',b.dataset.c===S.sent.color)})},
+ clear:function(){var c=document.getElementById('draw');if(c&&DR.ctx){DR.ctx.save();DR.ctx.setTransform(1,0,0,1,0,0);DR.ctx.clearRect(0,0,c.width,c.height);DR.ctx.restore()}},
+ aloudsent:function(el){if(!S.sent.starred){S.sent.starred=true;stars++;persist();burst(el);chime(true);var b=document.getElementById('aloudbtn');if(b){b.disabled=true;b.lastChild.textContent='Great reading! Star earned'}announce('Star earned')}}
+};
+
+$app.addEventListener('click',function(e){
+  var t=e.target.closest('[data-act]');if(!t)return;
+  if(t.classList.contains('sheetpanel')&&e.target!==t)return; /* backdrop only */
+  var f=A[t.dataset.act];if(f)f(t,e)});
+$app.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target.getAttribute&&e.target.getAttribute('role')==='button'&&e.target.dataset.act){e.preventDefault();A[e.target.dataset.act](e.target,e)}});
+
+window.__rr={S:S,A:A,WORDS:WORDS,render:render};
+render();
+})();
+</script>
+
+</body></html>
