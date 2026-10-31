@@ -353,7 +353,7 @@ button.chip{cursor:pointer;box-shadow:0 3px 0 var(--navy)}
   <p>No answer key is supplied. The player (or a grown-up) taps whether a word was read right. The spelling box only compares what was typed with the word on the sheet.</p>
   <h3>Privacy</h3>
   <p>No names, no accounts, no tracking. The game does not need the internet. The word album is saved only on this device, in this browser, and you can clear it. Typed spelling and sentences are never saved or sent anywhere. Please do not type names.</p>
-  <p><span class="newtag">NEW</span><b>Voice is optional and starts off.</b> If a grown-up turns it on, the microphone button lets a student say the letters or a sentence. On many phones that sends the voice to the phone maker's speech service to turn it into words, so it is not private or offline, and it is not always right with letters. Typing always works.</p>
+  <p><span class="newtag">NEW</span><b>Voice is optional and starts off.</b> If a grown-up turns it on, the microphone button lets a student say the letters or a sentence. It stays on from row to row until the microphone is tapped again, so the phone asks only once. On many phones that sends the voice to the phone maker's speech service to turn it into words, so it is not private or offline, and it is not always right with letters. Typing always works.</p>
   <h3>For grown-ups</h3>
   <p>Ten to fifteen minutes can be plenty. Stop sooner if they are tired. A few words, read happily, is a good day. Let your child try first and praise effort ("You sounded that out!"). If a word is stuck, say it together and move on.</p>
   <p>Not a substitute for reading instruction. Permission to share the original sheet is not confirmed.</p>
@@ -639,7 +639,7 @@ const cleanLetters=s=>String(s||'').toLowerCase().replace(/[^a-z]/g,'');
    ===================================================================== */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const VOICE=!!SR;
-let voiceOK=false,rec=null,listening=false;
+let voiceOK=false,rec=null,listening=false,hold=false;
 const LETTER_SOUNDS={a:'a ay eh',b:'b be bee',c:'c see sea',d:'d dee',e:'e ee',f:'f eff ef',g:'g gee',h:'h aitch',i:'i eye aye',
   j:'j jay',k:'k kay',l:'l el ell',m:'m em',n:'n en',o:'o oh owe',p:'p pee pea',q:'q queue cue',r:'r are',s:'s ess',t:'t tee tea',
   u:'u you ewe',v:'v vee',w:'w',x:'x ex',y:'y why wye',z:'z zee zed'};
@@ -664,6 +664,7 @@ function micUI(on){
     b.setAttribute('aria-label',on?'Listening. Tap to stop.':'Say it instead of typing')});
 }
 function stopListen(){
+  hold=false;
   if(rec){try{rec.abort()}catch(e){}rec=null}
   listening=false;micUI(false);
 }
@@ -671,43 +672,60 @@ function syncUncoverLabel(){
   const b=$('#pActions [data-act="uncover"]');
   if(b)b.textContent=cleanLetters(game.typed)?'Check my spelling':'Uncover to check';
 }
-function startListen(kind){
-  if(!VOICE)return;
-  stopListen();
-  const target=$(kind==='spell'?'#spellIn':'#sentIn');if(!target)return;
-  const hint=m=>{const h=$(kind==='spell'?'#spellHint':'#sentHint');if(h)h.textContent=m};
-  const base=kind==='sent'&&target.value.trim()?target.value.trim()+' ':'';
+// One listening session stays open from row to row, so the phone asks for the
+// microphone once, not once per row. It stops when the grown-up taps the mic again
+// or the player leaves the game.
+function voiceTarget(){
+  const s=$('#spellIn');if(s)return{kind:'spell',el:s,hint:$('#spellHint')};
+  const t=$('#sentIn');if(t)return{kind:'sent',el:t,hint:$('#sentHint')};
+  return null;
+}
+let lastIdx=-1,lastEl=null,base='';
+function startListen(){
+  if(!VOICE||rec)return;
+  hold=true;
   let r;
-  try{r=new SR()}catch(e){hint('Voice did not start. You can type instead.');return}
-  r.lang='en-US';r.interimResults=true;r.maxAlternatives=1;r.continuous=false;
-  r.onstart=()=>{listening=true;micUI(true);hint(kind==='spell'?'Listening… say the letters one at a time.':'Listening… say your sentence.')};
+  try{r=new SR()}catch(e){hold=false;micUI(false);return}
+  r.lang='en-US';r.interimResults=true;r.maxAlternatives=1;r.continuous=true;
+  r.onstart=()=>{listening=true;micUI(true);const T=voiceTarget();
+    if(T)T.hint.textContent=T.kind==='spell'?'Listening… say the letters one at a time.':'Listening… say your sentence.'};
   r.onresult=e=>{
-    let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript+' ';t=t.trim();
-    if(kind==='spell'){
+    const T=voiceTarget();if(!T)return;
+    const i=e.results.length-1,t=String(e.results[i][0].transcript).trim();
+    if(i!==lastIdx||T.el!==lastEl){lastIdx=i;lastEl=T.el;base=T.kind==='sent'&&T.el.value.trim()?T.el.value.trim()+' ':''}
+    if(T.kind==='spell'){
       const L=lettersFrom(t);
-      if(L){target.value=L;game.typed=L;syncUncoverLabel();hint('I heard: '+L.toUpperCase().split('').join(' ')+'. Fix any letter by typing.')}
-      else hint('I heard “'+t+'”. Try saying the letters one at a time.');
-    }else{target.value=base+t;game.sentDraft=target.value}
+      if(L){T.el.value=L;game.typed=L;syncUncoverLabel();T.hint.textContent='I heard: '+L.toUpperCase().split('').join(' ')+'. Fix any letter by typing.'}
+      else T.hint.textContent='I heard “'+t+'”. Try saying the letters one at a time.';
+    }else{T.el.value=base+t;game.sentDraft=T.el.value}
   };
   r.onerror=e=>{
-    hint(e.error==='not-allowed'||e.error==='service-not-allowed'?'The microphone is blocked here. You can type instead.'
-        :e.error==='no-speech'?'I did not hear anything. Tap the microphone and try again.'
-        :'Voice did not work. You can type instead.');
+    if(e.error==='no-speech')return;
+    hold=false;
+    const T=voiceTarget();
+    if(T)T.hint.textContent=(e.error==='not-allowed'||e.error==='service-not-allowed')?'The microphone is blocked here. You can type instead.':'Voice stopped. Tap the microphone to try again, or type instead.';
   };
-  r.onend=()=>{listening=false;micUI(false);rec=null};
+  r.onend=()=>{
+    listening=false;rec=null;
+    if(hold){setTimeout(()=>{if(hold&&!rec)startListen()},300)}else micUI(false);
+  };
   rec=r;
-  try{r.start()}catch(e){listening=false;micUI(false);hint('Voice did not start. You can type instead.')}
+  try{r.start()}catch(e){hold=false;rec=null;listening=false;micUI(false)}
 }
-function micClick(kind){
+function micClick(){
   if(!VOICE)return;
-  if(listening){stopListen();return}
-  if(!voiceOK){
-    openModal({title:'Turn on voice?',
-      text:'Voice lets you say the letters or your sentence instead of typing. On many phones, your voice is sent to the phone maker’s speech service to turn it into words, so it is not private or offline, and it is not always right with letters. Ask a grown-up first. Nothing is saved.',
-      a:'No thanks',b:'Turn on voice',cb:()=>{voiceOK=true;startListen(kind)}});
+  if(hold||listening){
+    stopListen();
+    const T=voiceTarget();if(T)T.hint.textContent='Voice is off. You can type, or tap the microphone to turn it back on.';
     return;
   }
-  startListen(kind);
+  if(!voiceOK){
+    openModal({title:'Turn on voice?',
+      text:'Voice lets you say the letters or your sentence instead of typing. It stays on from row to row until you tap the microphone again, so the phone only asks once. On many phones, your voice is sent to the phone maker’s speech service to turn it into words, so it is not private or offline, and it is not always right with letters. Ask a grown-up first. Nothing is saved.',
+      a:'No thanks',b:'Turn on voice',cb:()=>{voiceOK=true;startListen()}});
+    return;
+  }
+  startListen();
 }
 
 /* =====================================================================
@@ -738,7 +756,6 @@ function renderTrail(){
 }
 function updatePlay(){
   const g=game,L=ROWS[g.row],n=g.n,word=n?WORDS[g.row][n-1]:'';
-  stopListen();
   renderTrail();
   const card=$('#pCard');
   if(word){
@@ -806,6 +823,7 @@ function updatePlay(){
   }
   $('#pActions').innerHTML=a;
   renderPanel();
+  micUI(listening);
 }
 
 // NEW: the typing box, spelling feedback, and sentence box live in one panel under the card
@@ -1079,7 +1097,7 @@ document.addEventListener('click',e=>{
     if(a==='roll')rollWithTumble();
     else if(a==='cover'){game.step='cover';updatePlay()}
     else if(a==='uncover')doUncover();
-    else if(a==='mic')micClick(el.dataset.kind);
+    else if(a==='mic')micClick();
     else if(a==='savesent')saveSentence();
     else if(a==='skipsent'){game.sentMode=false;updatePlay()}
     else if(a==='right')mark(true);
